@@ -1,0 +1,2251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Hub</title>
+   
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d0d1a; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; 
+            margin: 0;
+            overflow: hidden; 
+            color: #e0e0e0;
+            transition: background-color 0.5s ease; 
+        }
+        .game-hub-container {
+            background-color: #1a1a2e;
+            border-radius: 1.5rem;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 95vw; 
+            max-width: 700px; 
+            height: 95vh; 
+            overflow-y: hidden; 
+            position: relative;
+            transition: background-color 0.5s ease, box-shadow 0.5s ease; 
+        }
+        .top-controls {
+            display: flex;
+            justify-content: center; 
+            width: 100%;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0 0.5rem; 
+        }
+        .top-controls .game-mode-buttons, .top-controls .theme-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .top-controls button, .wordle-mode-buttons button, .theme-buttons button,
+        .regular-wordle-submit-guess, .regular-wordle-restart-game, .regular-wordle-hint-btn,
+        .reverse-wordle-submit-guess, .reverse-wordle-restart-game, .reverse-wordle-hint-btn {
+            background-color: #4b0082;
+            color: #e0e0e0;
+            padding: 0.6rem 1.2rem;
+            border: 1px solid #00ffff;
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(75, 0, 130, 0.5);
+            flex-shrink: 0; 
+        }
+        .top-controls button:hover, .wordle-mode-buttons button:hover, .theme-buttons button:hover,
+        .regular-wordle-submit-guess:hover, .regular-wordle-restart-game:hover, .regular-wordle-hint-btn:hover,
+        .reverse-wordle-submit-guess:hover, .reverse-wordle-restart-game:hover, .reverse-wordle-hint-btn:hover {
+            background-color: #6a00b0;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
+            transform: translateY(-2px);
+        }
+        .top-controls button.active, .wordle-mode-buttons button.active, .theme-buttons button.active {
+            background-color: #00ffff;
+            color: #0d0d1a;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.9);
+            border-color: #00e6e6;
+        }
+        .top-controls button:disabled, .wordle-mode-buttons button:disabled, .theme-buttons button:disabled,
+        .regular-wordle-submit-guess:disabled, .regular-wordle-restart-game:disabled, .regular-wordle-hint-btn:disabled,
+        .reverse-wordle-submit-guess:disabled, .reverse-wordle-restart-game:disabled, .reverse-wordle-hint-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .game-content {
+            width: 100%;
+            flex-grow: 1; 
+            display: flex;
+            flex-direction: column; 
+            justify-content: flex-start;
+            align-items: center;
+            overflow-y: auto; 
+            position: relative;
+            padding-top: 1rem; 
+        }
+        .game-section {
+            width: 100%;
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 1rem;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            flex-shrink: 0; 
+            padding-bottom: 1rem; 
+        }
+        .game-section.active {
+            display: flex; 
+        }
+
+        
+        #regularWordleGame {
+            background-image: linear-gradient(135deg, #2a0050 0%, #0a0020 100%);
+            background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%2300ffff" fill-opacity="0.1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 24v-4H4v4H0v2h4v4h2v-4h4v-2H6zm0 20v-4H4v4H0v2h4v4h2v-4h4v-2H6zM36 4v-4h-2v4h-4v2h4v4h2V6h4V4zm6 10v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm-6 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm-6-20v-4h-2v4h-4v2h4v4h2V14h4V12h-4zm0 40v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm-6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm-6-20v-4h-2v4h-4v2h4v4h2V4h4V2h-4zM24 4v-4h-2v4h-4v2h4v4h2V6h4V4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM42 4v-4h-2v4h-4v2h4v4h2V6h4V4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM0 44v-4H0v4H0v2h4v4h2v-4h4v-2H0zm0-20v-4H0v4H0v2h4v4h2v-4h4v-2H0zM12 4v-4h-2v4h-4v2h4v4h2V6h4V4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM48 4v-4h-2v4h-4v2h4v4h2V6h4V4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM54 4v-4h-2v4h-4v2h4v4h2V6h4V4z" fill="%2300ffff" fill-opacity="0.1"%3E%3C/path%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+        }
+        .regular-wordle-game-container {
+            background-color: transparent; 
+            padding: 0;
+            border-radius: 0;
+            box-shadow: none;
+            max-width: 100%;
+            width: 100%;
+        }
+        .regular-wordle-game-container h3, #reverseWordleGame h3 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .tile {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            border: 2px solid #3a3a3c; 
+            border-radius: 0.3rem; 
+            text-transform: uppercase;
+            transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease; 
+            transform-style: preserve-3d; 
+            backface-visibility: hidden; 
+            
+            width: min(12vw, 3rem);
+            height: min(12vw, 3rem);
+            font-size: min(6vw, 1.5rem);
+        }
+
+        .tile.correct {
+            background-color: #538d4e; 
+            border-color: #538d4e;
+            color: white;
+        }
+
+        .tile.present {
+            background-color: #d4ac0d; 
+            border-color: #d4ac0d;
+            color: white;
+        }
+
+        .tile.absent {
+            background-color: #3a3a3c; 
+            border-color: #3a3a3c;
+            color: white;
+        }
+
+        .tile.empty {
+            background-color: transparent;
+            border-color: #3a3a3c;
+        }
+
+        .tile.filled {
+            border-color: #7a7a7a;
+        }
+
+      
+        .shake {
+            animation: shake 0.5s;
+            animation-iteration-count: 1;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-7px); }
+            80% { transform: translateX(7px); }
+            100% { transform: translateX(0); }
+        }
+
+        
+        .flip {
+            transform: rotateX(90deg);
+            transition: transform 0.3s ease-in;
+        }
+        .flipped {
+            transform: rotateX(0deg);
+            transition: transform 0.3s ease-out;
+        }
+
+        
+        @media (max-width: 768px) {
+            .tile {
+                width: min(15vw, 2.8rem);
+                height: min(15vw, 2.8rem);
+                font-size: min(7vw, 1.4rem);
+            }
+            .game-hub-container {
+                padding: 1rem;
+            }
+            .top-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            .top-controls .game-mode-buttons, .top-controls .theme-buttons {
+                width: 100%;
+                justify-content: center;
+                margin-bottom: 0.5rem;
+            }
+            .top-controls button, .wordle-mode-buttons button {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tile {
+                width: min(18vw, 2.2rem);
+                height: min(18vw, 2.2rem);
+                font-size: min(9vw, 1.1rem);
+            }
+            .game-hub-container {
+                padding: 0.8rem;
+            }
+            .regular-wordle-game-container h3, #reverseWordleGame h3 {
+                font-size: 1.8rem;
+            }
+            .regular-wordle-guess-input, .reverse-wordle-guess-input {
+                font-size: 1.5rem;
+            }
+            .regular-wordle-submit-guess, .regular-wordle-restart-game, .regular-wordle-hint-btn,
+            .reverse-wordle-submit-guess, .reverse-wordle-restart-game, .reverse-wordle-hint-btn {
+                padding: 0.75rem 1.2rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        
+        .stats-modal {
+            display: none; 
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+        }
+        .stats-modal-content {
+            background-color: #1a1a2e;
+            margin: auto;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #00ffff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .stats-modal-content h2 {
+            font-size: 2rem;
+            color: #00ffff;
+            margin-bottom: 1.5rem;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #333;
+        }
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        .stat-label {
+            font-size: 1.1rem;
+            color: #e0e0e0;
+        }
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ffff;
+        }
+
+       
+        
+        .theme-default body {
+            background-color: #0d0d1a;
+            background-image: linear-gradient(135deg, #0d0d1a 0%, #2a0050 100%);
+        }
+        .theme-default .game-hub-container {
+            background-color: #1a1a2e;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+            border: 1px solid #00ffff;
+        }
+        .theme-default #regularWordleGame, .theme-default #reverseWordleGame {
+            background-image: linear-gradient(135deg, #2a0050 0%, #0a0020 100%);
+        }
+        .theme-default .tile {
+            border: 2px solid #3a3a3c;
+            color: white;
+        }
+        .theme-default .tile.correct { background-color: #538d4e; border-color: #538d4e; }
+        .theme-default .tile.present { background-color: #d4ac0d; border-color: #d4ac0d; } 
+        .theme-default .tile.absent { background-color: #3a3a3c; border-color: #3a3a3c; }
+        .theme-default .text-cyan-400 { color: #00ffff; text-shadow: 0 0 8px rgba(0, 255, 255, 0.7); }
+        .theme-default .wordle-mode-buttons button, .theme-default .top-controls button, .theme-default .theme-buttons button,
+        .theme-default .regular-wordle-submit-guess, .theme-default .regular-wordle-restart-game, .theme-default .regular-wordle-hint-btn,
+        .theme-default .reverse-wordle-submit-guess, .theme-default .reverse-wordle-restart-game, .theme-default .reverse-wordle-hint-btn {
+            background-color: #4b0082;
+            color: #e0e0e0;
+            border: 1px solid #00ffff;
+            box-shadow: 0 0 10px rgba(75, 0, 130, 0.5);
+        }
+        .theme-default .wordle-mode-buttons button.active, .theme-default .top-controls button.active, .theme-default .theme-buttons button.active {
+            background-color: #00ffff;
+            color: #0d0d1a;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.9);
+            border-color: #00e6e6;
+        }
+        .theme-default .regular-wordle-guess-input, .theme-default .reverse-wordle-guess-input {
+            background-color: #2a2a4a;
+            color: #e0e0e0;
+            border: 1px solid #4b0082;
+            box-shadow: inset 0 0 8px rgba(75, 0, 130, 0.3);
+        }
+        .theme-default .stats-modal-content {
+            background-color: #1a1a2e;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+            border: 1px solid #00ffff;
+        }
+        .theme-default .stats-modal-content h2 {
+            color: #00ffff;
+        }
+        .theme-default .stat-value {
+            color: #00ffff;
+        }
+
+        
+        .theme-neon body {
+            background-color: #000;
+            background-image: radial-gradient(circle at center, rgba(0,255,255,0.1) 0%, rgba(255,0,255,0.1) 100%);
+        }
+        .theme-neon .game-hub-container {
+            background-color: #111;
+            box-shadow: 0 0 60px rgba(255, 0, 255, 0.8), 0 0 30px rgba(0, 255, 255, 0.8);
+            border: 2px solid #f0f;
+        }
+        .theme-neon #regularWordleGame, .theme-neon #reverseWordleGame {
+            background-image: radial-gradient(circle at center, rgba(0,255,255,0.05) 0%, rgba(255,0,255,0.05) 100%);
+        }
+        .theme-neon .tile {
+            border: 2px solid #0ff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            color: #fff;
+        }
+        .theme-neon .tile.correct { background-color: #0f0; border-color: #0f0; box-shadow: 0 0 15px #0f0; }
+        .theme-neon .tile.present { background-color: #e0e000; border-color: #e0e000; box-shadow: 0 0 15px #e0e000; } 
+        .theme-neon .tile.absent { background-color: #555; border-color: #777; }
+        .theme-neon .text-cyan-400 { color: #f0f; text-shadow: 0 0 10px #f0f; }
+        .theme-neon .wordle-mode-buttons button, .theme-neon .top-controls button, .theme-neon .theme-buttons button,
+        .theme-neon .regular-wordle-submit-guess, .theme-neon .regular-wordle-restart-game, .theme-neon .regular-wordle-hint-btn,
+        .theme-neon .reverse-wordle-submit-guess, .theme-neon .reverse-wordle-restart-game, .theme-neon .reverse-wordle-hint-btn {
+            border: 2px solid #0ff;
+            background-color: #333;
+            color: #0ff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+        }
+        .theme-neon .wordle-mode-buttons button.active, .theme-neon .top-controls button.active, .theme-neon .theme-buttons button.active {
+            background-color: #f0f;
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.9);
+            border-color: #f0f;
+        }
+        .theme-neon .regular-wordle-guess-input, .theme-neon .reverse-wordle-guess-input {
+            border: 2px solid #f0f;
+            background-color: #333;
+            color: #0ff;
+            box-shadow: inset 0 0 10px rgba(255, 0, 255, 0.5);
+        }
+        .theme-neon .stats-modal-content {
+            border: 2px solid #f0f;
+            background-color: #111;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.8);
+        }
+        .theme-neon .stats-modal-content h2 {
+            color: #0ff;
+            text-shadow: 0 0 10px #0ff;
+        }
+        .theme-neon .stat-value {
+            color: #f0f;
+            text-shadow: 0 0 5px #f0f;
+        }
+
+        
+        #reverseWordleGame {
+            background-image: linear-gradient(135deg, #0a2000 0%, #2a5000 100%);
+            background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%2300ff00" fill-opacity="0.1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 24v-4H4v4H0v2h4v4h2v-4h4v-2H6zm0 20v-4H4v4H0v2h4v4h2v-4h4v-2H6zM36 4v-4h-2v4h-4v2h4v4h2V6h4V4zm6 10v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm-6 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm-6-20v-4h-2v4h-4v2h4v4h2V14h4V12h-4zm0 40v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm-6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm-6-20v-4h-2v4h-4v2h4v4h2V4h4V2h-4zM24 4v-4h-2v4h-4v2h4v4h2V6h4V4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM42 4v-4h-2v4h-4v2h4v4h2V6h4V4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM0 44v-4H0v4H0v2h4v4h2v-4h4v-2H0zm0-20v-4H0v4H0v2h4v4h2v-4h4v-2H0zM12 4v-4h-2v4h-4v2h4v4h2V6h4V4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM48 4v-4h-2v4h-4v2h4v4h2V6h4V4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm6-20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0 20v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM54 4v-4h-2v4h-4v2h4v4h2V6h4V4z" fill="%2300ff00" fill-opacity="0.1"%3E%3C/path%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+        }
+        .theme-neon #reverseWordleGame {
+            background-image: radial-gradient(circle at center, rgba(0,255,255,0.05) 0%, rgba(255,0,255,0.05) 100%);
+        }
+
+        .reverse-wordle-clues {
+            margin-bottom: 1.5rem;
+            border: 2px solid #4a4a4a;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px; 
+        }
+        .reverse-wordle-clues h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.8rem;
+            color: #00ff00;
+            text-shadow: 0 0 5px rgba(0,255,0,0.5);
+        }
+        .reverse-wordle-clue-row {
+            display: grid;
+            gap: 0.3rem;
+            margin-bottom: 0.5rem;
+            justify-content: center;
+        }
+        .reverse-wordle-clue-row .tile {
+            
+            width: min(10vw, 2.5rem);
+            height: min(10vw, 2.5rem);
+            font-size: min(5vw, 1.2rem);
+        }
+        @media (max-width: 480px) {
+            .reverse-wordle-clue-row .tile {
+                width: min(12vw, 2rem);
+                height: min(12vw, 2rem);
+                font-size: min(6vw, 1rem);
+            }
+        }
+
+        
+        .virtual-keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 100%;
+            max-width: 500px; 
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 1rem;
+            box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.2);
+        }
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+        .keyboard-button {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #555; 
+            color: white;
+            padding: 0.8rem 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            user-select: none; 
+            min-width: 2rem; 
+            height: 3rem; 
+        }
+        .keyboard-button:hover {
+            background-color: #777;
+        }
+        .keyboard-button.large {
+            flex-grow: 1.5; 
+            font-size: 0.9rem;
+            padding: 0.8rem 0.8rem;
+        }
+
+        
+        .keyboard-button.correct {
+            background-color: #538d4e; 
+            color: white;
+        }
+        .keyboard-button.present {
+            background-color: #d4ac0d; 
+            color: white;
+        }
+        .keyboard-button.absent {
+            background-color: #3a3a3c; 
+            color: white;
+        }
+
+        
+        .theme-neon .virtual-keyboard {
+            border: 2px solid #f0f;
+            box-shadow: inset 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+        .theme-neon .keyboard-button {
+            border: 1px solid #0ff;
+            background-color: #333;
+            color: #0ff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+        }
+        .theme-neon .keyboard-button:hover {
+            background-color: #555;
+        }
+        .theme-neon .keyboard-button.correct { background-color: #0f0; border-color: #0f0; box-shadow: 0 0 15px #0f0; }
+        .theme-neon .keyboard-button.present { background-color: #e0e000; border-color: #e0e000; box-shadow: 0 0 15px #e0e000; }
+        .theme-neon .keyboard-button.absent { background-color: #555; border-color: #777; }
+
+    </style>
+</head>
+<body class="theme-default">
+    <div class="game-hub-container">
+        <div class="top-controls">
+            <div class="game-mode-buttons">
+                <button id="navRegularWordle" class="active">Regular Wordle</button>
+                <button id="navReverseWordle">Reverse Wordle</button>
+            </div>
+            <div class="theme-buttons">
+                <button id="themeDefaultBtn" class="active">Default</button>
+                <button id="themeNeonBtn">Neon</button>
+            </div>
+        </div>
+
+        <div class="game-content">
+            
+            <div id="regularWordleGame" class="game-section active regular-wordle-game-container">
+                <h3 class="text-2xl font-bold mb-4 text-center text-cyan-400">Regular Wordle</h3>
+                <div class="wordle-mode-buttons mb-4">
+                    <button id="regularWordleEasyBtn" class="active">5 Letters (Easy)</button>
+                    <button id="regularWordleHardBtn">6 Letters (Hard)</button>
+                    <button id="regularWordleExpertBtn">7 Letters (Expert)</button>
+                </div>
+                
+                <div id="regular-wordle-grid" class="grid gap-2 mb-6">
+                    
+                </div>
+
+                <div id="regular-wordle-message-area" class="text-lg font-semibold mb-4 min-h-[2rem]"></div>
+
+                
+                <div class="flex flex-col items-center gap-4 mb-6 w-full max-w-xs">
+                    <input
+                        type="text"
+                        id="regular-wordle-guess-input"
+                        class="w-full p-3 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-2xl uppercase"
+                        placeholder="Type your guess"
+                        disabled="true"  <!-- Disabled for virtual keyboard only -->
+                    
+                    <button
+                        id="regular-wordle-submit-guess"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors duration-200"
+                    >
+                        Submit Guess
+                    </button>
+                    <button
+                        id="regular-wordle-hint-btn"
+                        class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors duration-200"
+                    >
+                        Get Hint (Streak: <span id="hintStreakCount">0</span>)
+                    </button>
+                    <button
+                        id="regular-wordle-restart-game"
+                        class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors duration-200"
+                    >
+                        Restart Game
+                    </button>
+                </div>
+                
+                <div id="regular-wordle-keyboard" class="virtual-keyboard"></div>
+            </div>
+
+            
+            <div id="reverseWordleGame" class="game-section reverse-wordle-game-container">
+                <h3 class="text-2xl font-bold mb-4 text-center text-green-400">Reverse Wordle</h3>
+                <div class="wordle-mode-buttons mb-4">
+                    <button id="reverseWordleEasyBtn" class="active">5 Letters (Easy)</button>
+                    <button id="reverseWordleHardBtn">6 Letters (Hard)</button>
+                    <button id="reverseWordleExpertBtn">7 Letters (Expert)</button>
+                </div>
+                <p class="text-center mb-4">Figure out the secret word based on the clues below!</p>
+                
+                <div id="reverse-wordle-clues-display" class="reverse-wordle-clues">
+                    <h4>Clues:</h4>
+                    
+                </div>
+
+                <div id="reverse-wordle-message-area" class="text-lg font-semibold mb-4 min-h-[2rem]"></div>
+
+                <div class="flex flex-col items-center gap-4 mb-6 w-full max-w-xs">
+                    <input
+                        type="text"
+                        id="reverse-wordle-guess-input"
+                        class="w-full p-3 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-2xl uppercase"
+                        placeholder="Your secret word guess"
+                        disabled="true" <!-- Disabled for virtual keyboard only -->
+                    
+                    <button
+                        id="reverse-wordle-submit-guess"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors duration-200"
+                    >
+                        Submit Secret Word
+                    </button>
+                    <button
+                        id="reverse-wordle-hint-btn"
+                        class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors duration-200"
+                    >
+                        Get Hint (Remaining: <span id="reverseHintCount">2</span>)
+                    </button>
+                    <button
+                        id="reverse-wordle-restart-game"
+                        class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-colors duration-200"
+                    >
+                        Restart Reverse Wordle
+                    </button>
+                </div>
+                
+                <div id="reverse-wordle-keyboard" class="virtual-keyboard"></div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="statsModal" class="stats-modal" style="display: none;">
+        <div class="stats-modal-content">
+            <span class="close-button" id="closeStatsModal">&times;</span>
+            <h2>Your Stats</h2>
+            <div class="stat-item">
+                <span class="stat-label">Games Played:</span>
+                <span class="stat-value" id="statGamesPlayed">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Games Won:</span>
+                <span class="stat-value" id="statGamesWon">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Win Percentage:</span>
+                <span class="stat-value" id="statWinPercentage">0%</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Current Streak:</span>
+                <span class="stat-value" id="statCurrentStreak">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Max Streak:</span>
+                <span class="stat-value" id="statMaxStreak">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Average Guesses (Wins):</span>
+                <span class="stat-value" id="statAvgGuesses">N/A</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">1-Guess Wins:</span>
+                <span class="stat-value" id="statOneGuessWins">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        
+        const regularWordleWords5 = [
+            "ABACK", "ABATE", "ABBEY", "ABBOT", "ABHOR", "ABIDE", "ABOARD", "ABODE", "ABORT", "ABOUT",
+            "ABOVE", "ABUSE", "ABYSS", "ACORN", "ACUTE", "ADAPT", "ADDER", "ADEPT", "ADIEU", "ADMIT",
+            "ADOPT", "ADORE", "ADORN", "ADULT", "AERIE", "AFIRE", "AGAIN", "AGAPE", "AGATE", "AGENT",
+            "AGILE", "AGLOW", "AGONY", "AGORA", "AGREE", "AHEAD", "AHOY", "AIDER", "AISLE", "ALARM",
+            "ALBUM", "ALERT", "ALGAE", "ALIAS", "ALIEN", "ALIGN", "ALIKE", "ALLAY", "ALLEY",
+            "ALLOT", "ALLOW", "ALLOY", "ALOFT", "ALOHA", "ALONE", "ALONG", "ALOOF", "ALOUD", "ALPHA",
+            "ALTAR", "ALTER", "AMASS", "AMBER", "AMBLE", "AMEND", "AMISS", "AMITY", "AMONG", "AMPLE",
+            "AMPLY", "AMUSE", "ANGEL", "ANGER", "ANGLE", "ANGRY", "ANIMA", "ANKLE", "ANNEX", "ANNOY",
+            "ANNUL", "ANODE", "ANTIC", "ANVIL", "APART", "APHID", "APPLY", "APRON", "ARBOR", "ARDOR",
+            "ARENA", "ARGUE", "ARISE", "ARMOR", "AROMA", "AROSE", "ARRAY", "ARROW", "ARSON", "ARTIC",
+            "ASCOT", "ASHEN", "ASIDE", "ASKEW", "ASLEEP", "ASSET", "ATLAS", "ATONE", "ATTIC", "AUDIO",
+            "AUDIT", "AUGER", "AUNTY", "AVAIL", "AVERT", "AWAIT", "AWAKE", "AWARD", "AWARE", "AWFUL",
+            "AWOKE", "AXIOM", "AZURE", "BABEL", "BACON", "BADGE", "BADLY", "BAGEL", "BAKER", "BALDY",
+            "BALEF", "BALLS", "BALLY", "BAMBO", "BANAL", "BANDY", "BANJO", "BANKY", "BARGE", "BARKS",
+            "BARNY", "BASAL", "BASIC", "BASIL", "BASIN", "BASIS", "BATCH", "BATHS", "BATON", "BATTY",
+            "BAWDY", "BAYOU", "BEACH", "BEADY", "BEANS", "BEARD", "BEAST", "BEATS", "BEAUT", "BEAUX",
+            "BELAY", "BELCH", "BELLY", "BELOW", "BENCH", "BERRY", "BIRCH", "BIRDS", "BLACK", "BLADE",
+            "BLAME", "BLAND", "BLANK", "BLARE", "BLAST", "BLAZE", "BLEAK", "BLEAT", "BLEED", "BLEEP",
+            "BLEND", "BLESS", "BLIMP", "BLIND", "BLINK", "BLISS", "BLITZ", "BLOAT", "BLOCK", "BLOND",
+            "BLOOD", "BLOOM", "BLOWN", "BLUEY", "BLUFF", "BLUNT", "BLURB", "BLURY", "BOAST", "BOATY",
+            "BOGGY", "BOMBS", "BONDS", "BONES", "BONNY", "BONUS", "BOOBY", "BOOST", "BOOZE", "BOOZY",
+            "BORAX", "BORNE", "BOTCH", "BOUGH", "BOUND", "BOWEL", "BOXER", "BOYCE", "BRACE", "BRAGG",
+            "BRAID", "BRAIN", "BRAKE", "BRAND", "BRASH", "BRASS", "BRAVE", "BRAWL", "BREAD", "BREAK",
+            "BREED", "BRIBE", "BRICK", "BRIDE", "BRIEF", "BRING", "BRISK", "BROAD", "BROIL", "BROKE",
+            "BROWN", "BRUSH", "BRUTE", "BUBBY", "BUGGY", "BUILD", "BULGE", "BULLY", "BUMPY", "BURST",
+            "BUSHY", "BUTCH", "BUYER", "BYLAW", "CABAL", "CABIN", "CABLE", "CACAO", "CACHE", "CACTI",
+            "CADET", "CAGEY", "CAIRN", "CAJUN", "CAKES", "CALAM", "CALCI", "CALEF", "CALFS", "CALIB",
+            "CALIF", "CALIX", "CALLS", "CALMS", "CALOR", "CAMEL", "CAMEO", "CANAL", "CANDY", "CANES",
+            "CANNY", "CANOE", "CANON", "CAPER", "CAPES", "CAPIT", "CARAT", "CARDS", "CARED", "CAREF",
+            "CARES", "CARGO", "CAROL", "CARRY", "CARTS", "CARVE", "CASES", "CASHY", "CASKS", "CASTE",
+            "CATCH", "CATER", "CATTY", "CAULK", "CAUSA", "CAUSE", "CAVED", "CAVES", "CEASE", "CEDAR",
+            "CELIA", "CELLS", "CENTS", "CHAIN", "CHAIR", "CHALK", "CHAMP", "CHANT", "CHAOS", "CHARM",
+            "CHASE", "CHASM", "CHEAP", "CHEAT", "CHECK", "CHEEK", "CHEER", "CHESS", "CHEST", "CHICK",
+            "CHIEF", "CHILD", "CHILL", "CHIME", "CHINA", "CHINS", "CHIPS", "CHIRP", "CHOIR", "CHOKE",
+            "CHOMP", "CHORD", "CHORE", "CHOSE", "CHOWS", "CHUCK", "CHUMP", "CHURN", "CIDER", "CIGAR",
+            "CINCH", "CITED", "CITER", "CIVES", "CIVIC", "CIVIL", "CLACK", "CLAIM", "CLAMP", "CLANG",
+            "CLANK", "CLASH", "CLASP", "CLASS", "CLEAN", "CLEAR", "CLEFT", "CLERK", "CLICK", "CLIFF",
+            "CLIMB", "CLING", "CLINK", "CLIPS", "CLOAK", "CLOCK", "CLONE", "CLOSE", "CLOTH", "CLOUD",
+            "CLOUT", "CLOVE", "CLOWN", "CLUBS", "CLUCK", "CLUMP", "CLUNG", "COACH", "COALS", "COAST",
+            "COAXE", "COBRA", "COCKS", "COCOA", "CODEX", "COILS", "COINS", "COLDS", "COLIC", "COLOR",
+            "COLTS", "COMAS", "COMBS", "COMET", "COMFY", "COMIC", "COMMA", "CONCH", "CONDO", "CONES",
+            "COOED", "COOKS", "COOLY", "COOPS", "COPED", "COPES", "COPRA", "CORAL", "CORDS", "COREY",
+            "CORKS", "CORNY", "COSTS", "COUCH", "COUGH", "COULD", "COUNT", "COURT", "COVEN", "COVER",
+            "COVET", "CRABS", "CRACK", "CRAFT", "CRANK", "CRASH", "CRASS", "CRAVE", "CRAWL", "CRAZY",
+            "CREAK", "CREAM", "CREDO", "CREED", "CREEK", "CREEP", "CREPE", "CRIES", "CRIME", "CRIMP",
+            "CRING", "CRISP", "CROAK", "CRONE", "CROOK", "CROSS", "CROWD", "CROWN", "CRUDE", "CRUEL",
+            "CRUMB", "CRUMP", "CRUSH", "CRUST", "CRYPT", "CUBIC", "CUDDY", "CULTS", "CURLY", "CURSE",
+            "CURVE", "CUTIE", "CYCLE", "CYNIC", "DAIRY", "DAISY", "DALLY", "DANCE", "DANDY", "DATED",
+            "DATER", "DAUNT", "DAWN", "DEALT", "DEATH", "DEBAR", "DEBIT", "DECAY", "DECOR", "DECOY",
+            "DECRY", "DEEDS", "DEFER", "DEIGN", "DELAY", "DELFT", "DELIC", "DELIS", "DEMON", "DEMUR",
+            "DENIM", "DENSE", "DETER", "DEUCE", "DEVIL", "DIARY", "DICEY", "DIGIT", "DILLY", "DINER",
+            "DINGY", "DIRGE", "DIRTY", "DISCO", "DITCH", "DITTO", "DIVAN", "DIVEF", "DIVES", "DIVOT",
+            "DIZZY", "DODGY", "DOING", "DOLLS", "DONOR", "DONUT", "DOOMY", "DOUBT", "DOUGH", "DOZEN",
+            "DRAFT", "DRAGS", "DRAIN", "DRAMA", "DRANK", "DRAWL", "DRAWN", "DREAD", "DREAM", "DRESS",
+            "DRIED", "DRIFT", "DRILL", "DRINK", "DRIVE", "DROIT", "DROLL", "DRONE", "DROOP", "DROWS",
+            "DRUNK", "DRYER", "DRYLY", "DUCHY", "DULLY", "DUMMY", "DUNCE", "DUSTY", "DUTCH", "DWELT",
+            "DYING", "EAGER", "EAGLE", "EARLY", "EARNS", "EARTH", "EASEL", "EASILY", "EASTS", "EATEN",
+            "EATER", "EBONY", "ECLAT", "EDICT", "EDIFY", "EERIE", "EIGHT", "EJECT", "ELBOW", "ELDER",
+            "ELECT", "ELEGY", "ELFIN", "ELIDE", "ELITE", "ELOPE", "ELUDE", "EMBAR", "EMBED", "EMCEE",
+            "EMPTY", "ENACT", "ENAMEL", "ENDEW", "ENDOW", "ENEMA", "ENEMY", "ENJOY", "ENROL", "ENSUE",
+            "ENTER", "ENTRY", "ENVOY", "EPOCH", "EPOXY", "EQUAL", "EQUIP", "ERECT", "ERODE", "ERROR",
+            "ERUPT", "ESSAY", "ETHIC", "EVADE", "EVENS", "EVENT", "EVERF", "EVERY", "EVICT", "EVILS",
+            "EVOKE", "EXACT", "EXALT", "EXCEL", "EXERT", "EXILE", "EXIST", "EXITS", "EXODUS", "EXPEL",
+            "EXTOL", "EXTRA", "EXULT", "FABLE", "FACET", "FAINT", "FAIRY", "FAITH", "FALLS", "FALSE",
+            "FANCY", "FANNY", "FARCE", "FATAL", "FATTY", "FAULT", "FAUNA", "FAVOR", "FEAST", "FEELS",
+            "FEIGN", "FELLA", "FELON", "FEMUR", "FENCE", "FERRY", "FEWER", "FIBER", "FIELD", "FIERY",
+            "FIFTY", "FIGHT", "FILET", "FINAL", "FINCH", "FINDS", "FINER", "FINGE", "FINIS", "FIRMS",
+            "FIRST", "FISHY", "FIXED", "FIZZY", "FLACK", "FLAGS", "FLAIR", "FLAME", "FLANK", "FLASH",
+            "FLASK", "FLATS", "FLAVOR", "FLAWS", "FLEAS", "FLECK", "FLEET", "FLESH", "FLICK", "FLIER",
+            "FLIES", "FLING", "FLINT", "FLIRT", "FLOAT", "FLOCK", "FLOOD", "FLOOR", "FLORA", "FLOSS",
+            "FLOUR", "FLOUT", "FLOWN", "FLUFF", "FLUID", "FLUNG", "FLUSH", "FLUTE", "FLYER", "FOAMS",
+            "FOCAL", "FOCUS", "FOGGY", "FOILS", "FOLIO", "FOLKS", "FORCE", "FORGE", "FORGO", "FORKS",
+            "FORMA", "FORMS", "FORTE", "FORTH", "FORTY", "FORUM", "FOSSA", "FOUND", "FOYER", "FRAIL",
+            "FRAME", "FRANK", "FRAUD", "FREAK", "FREED", "FREER", "FRESH", "FRETS", "FRIED", "FRIES",
+            "FRISK", "FROCK", "FROGS", "FRONT", "FROST", "FROTH", "FROWN", "FROZE", "FRUIT", "FUELS",
+            "FULLY", "FUNGI", "FUNKY", "FUNNY", "FURRY", "FUSSY", "GAILY", "GAINS", "GAITS", "GALES",
+            "GALLS", "GAMER", "GAMUT", "GANGLY", "GATES", "GAUDY", "GAUGE", "GAUNT", "GAVEL", "GAWKY",
+            "GAYLY", "GEARS", "GEESE", "GENES", "GENIE", "GENRE", "GHOST", "GIANT", "GIVEN", "GLADE",
+            "GLARE", "GLASS", "GLAZE", "GLEAM", "GLEAN", "GLIDE", "GLIMPSE", "GLOBE", "GLOOM", "GLORY",
+            "GLOVE", "GLOWS", "GLUEY", "GLYPH", "GNASH", "GNOME", "GOADS", "GOALS", "GOATS", "GODLY",
+            "GONER", "GOODS", "GOOEY", "GOOFS", "GOOFY", "GOOSE", "GORGE", "GOUGE", "GRACE", "GRADE",
+            "GRAFT", "GRAIL", "GRAIN", "GRAND", "GRANT", "GRAPE", "GRAPH", "GRASP", "GRASS", "GRATE",
+            "GRAVE", "GRAVY", "GRAZE", "GREAT", "GREED", "GREEN", "GREET", "GRIEF", "GRILL", "GRIME",
+            "GRIMY", "GRIND", "GRINS", "GRIPE", "GRIPS", "GRIST", "GROAN", "GROIN", "GROOM", "GROPE",
+            "GROSS", "GROUP", "GROVE", "GROWL", "GROWN", "GRUES", "GRUFF", "GRUMP", "GUANO", "GUARD",
+            "GUESS", "GUEST", "GUIDE", "GUILD", "GUILE", "GUILT", "GULCH", "GULLY", "GUMMY", "GUNKY",
+            "GURUS", "GUSTO", "GUTSY", "HABIT", "HACKS", "HAIRY", "HALEF", "HALLO", "HALOS", "HANDY",
+            "HAPPY", "HARMS", "HARSH", "HASPS", "HASTE", "HATCH", "HAULS", "HAUNT", "HAVEN", "HAVOC",
+            "HAZEL", "HEADY", "HEARD", "HEART", "HEATH", "HEAVE", "HEAVY", "HEELS", "HEIST", "HELIX",
+            "HELLO", "HENCE", "HERBS", "HERDS", "HERON", "HESIT", "HIDES", "HIGHS", "HILLS", "HINTS",
+            "HITCH", "HOARD", "HOBBY", "HOCKS", "HOGAN", "HOLDS", "HOLEY", "HOMER", "HONEY", "HONOR",
+            "HOODY", "HOOFS", "HOOKS", "HOOPS", "HOOTS", "HOPED", "HOPES", "HORDE", "HORNY", "HORSE",
+            "HOTEL", "HOURS", "HOUSE", "HOVEL", "HOWDY", "HUMAN", "HUMID", "HUMOR", "HUMPS", "HUNGRY",
+            "HURRY", "HUTCH", "HYMEN", "HYPER", "ICING", "IDEAL", "IDIOM", "IDIOT", "IDOLS", "IGLOO",
+            "ILIAC", "IMAGE", "IMPLY", "INANE", "INBOX", "INCUR", "INDEX", "INDIE", "INERT", "INFER",
+            "INGOT", "INLAY", "INLET", "INNER", "INPUT", "INTER", "INTOX", "INTRA", "IRATE", "IRONY",
+            "ISLET", "ISSUE", "ITALY", "ITCHY", "ITEMS", "IVORY", "JACKS", "JAILS", "JAPAN", "JAZZY",
+            "JEANS", "JELLY", "JERKS", "JESTS", "JEWEL", "JIGGY", "JIMMY", "JINKS", "JOINS", "JOINT",
+            "JOIST", "JOKER", "JOLLY", "JOLTS", "JOUST", "JUDGE", "JUICE", "JUICY", "JUMBO", "JUMPS",
+            "JUNKY", "JUROR", "KAYAK", "KAZOO", "KEELS", "KENNE", "KHAKI", "KICKS", "KIDDY", "KILLS",
+            "KINDS", "KINGS", "KISSY", "KITES", "KITTY", "KNACK", "KNEAD", "KNEEL", "KNIFE", "KNITS",
+            "KNOBS", "KNOCK", "KNOTS", "KNOWS", "KOALA", "KUDOS", "LABEL", "LABOR", "LACES", "LACKS",
+            "LADEN", "LAKES", "LAMBS", "LAMES", "LANCE", "LANDS", "LANES", "LAPSE", "LARGE", "LARVA",
+            "LASER", "LATCH", "LATER", "LATHE", "LATTE", "LAUGH", "LAYER", "LEADS", "LEAFS", "LEAKY",
+            "LEANS", "LEAPS", "LEARN", "LEASE", "LEASH", "LEAVE", "LEDGE", "LEECH", "LEGAL", "LEGGY",
+            "LEMON", "LENDS", "LENSE", "LENTO", "LEVEL", "LEVER", "LIGHT", "LIKEN", "LIMBO", "LIMBS",
+            "LIMIT", "LINEN", "LINKS", "LIONS", "LIPID", "LIQUID", "LISPS", "LISTS", "LITER", "LITHE",
+            "LIVED", "LIVER", "LIVES", "LIVID", "LLAMA", "LOADS", "LOAFS", "LOAMY", "LOANS", "LOBBY",
+            "LOCAL", "LOCUS", "LODGE", "LOFTY", "LOGIC", "LOGIN", "LOOKS", "LOONY", "LOOSE", "LORDS",
+            "LOSEF", "LOSER", "LOTUS", "LOUDS", "LOUSE", "LOUSY", "LOVED", "LOVER", "LOVES", "LOWER",
+            "LOYAL", "LUCID", "LUCKY", "LULLS", "LUMPY", "LUNCH", "LUNGE", "LUNGS", "LURKS", "LUSTY",
+            "LYING", "MACRO", "MADAM", "MADLY", "MAGIC", "MAIDS", "MAILS", "MAINE", "MAJOR", "MAKER",
+            "MALES", "MALTY", "MAMMA", "MANGE", "MANGO", "MAPLE", "MARCH", "MARKS", "MARRY", "MARSH",
+            "MASKS", "MASON", "MASSY", "MATCH", "MATED", "MATER", "MATES", "MAUVE", "MAXIM", "MAYBE",
+            "MAYOR", "MEALY", "MEANS", "MEANT", "MEATS", "MECCA", "MEDAL", "MEDIA", "MEETS", "MELON",
+            "MELTS", "MEMOS", "MERCY", "MERGE", "MERRY", "MESSY", "METAL", "METRO", "MIDST", "MIGHT",
+            "MILES", "MILKY", "MILLS", "MIMIC", "MINCE", "MINDS", "MINER", "MINUS", "MIRTH", "MISTY",
+            "MITER", "MIXER", "MOANS", "MOATS", "MOCKS", "MODEL", "MODEM", "MODES", "MOLDS", "MOLEF",
+            "MOLES", "MONEY", "MONTH", "MOODY", "MOONS", "MOORS", "MORAL", "MOREL", "MORNS", "MORTA",
+            "MOSSY", "MOTEL", "MOTOR", "MOTTO", "MOULD", "MOUNT", "MOURN", "MOUSE", "MOUTH", "MOVED",
+            "MOVER", "MOVES", "MOVIE", "MOWED", "MOWER", "MUCHY", "MUCKS", "MUDDY", "MULES", "MULLE",
+            "MUMMY", "MUNCH", "MUSIC", "MUSKY", "MUSTY", "NANNY", "NASTY", "NAVAL", "NAVEL", "NEARS",
+            "NEATS", "NEEDS", "NEEDY", "NERVY", "NESTS", "NEVER", "NEWEL", "NEWLY", "NICER", "NICHE",
+            "NIGHT", "NIMBY", "NINTH", "NOBLE", "NOBLY", "NOISE", "NOISY", "NOMAD", "NORMS", "NORTH",
+            "NOSEY", "NOTCH", "NOTES", "NOVEL", "NURSE", "NYLON", "OASIS", "OATEN", "OCEAN", "ODDER",
+            "ODDSY", "OFFER", "OFTEN", "OLDEN", "OLDER", "OLIVE", "OMENS", "OMITS", "ONION", "ONSET",
+            "OPERA", "OPTIC", "ORBIT", "ORDER", "ORGAN", "OTHER", "OUGHT", "OUNCE", "OUTDO", "OUTER",
+            "OUTGO", "OUTFIT", "OUTSET", "OVALS", "OVARY", "OVENS", "OVERT", "OWING", "OWNER", "OXIDE",
+            "OZONE", "PACER", "PACES", "PAINS", "PAINT", "PALES", "PALMS", "PANEL", "PANTS", "PAPER",
+            "PARCH", "PARED", "PARES", "PARKS", "PARRY", "PARTS", "PARTY", "PASSE", "PASTE", "PASTY",
+            "PATCH", "PATHS", "PATIO", "PAUSE", "PAYER", "PEACE", "PEACH", "PEAKS", "PEARL", "PEARS",
+            "PEASE", "PECKY", "PEDAL", "PEELS", "PEERS", "PELTS", "PENAL", "PENNY", "PEONY", "PERIL",
+            "PERKS", "PESTS", "PETAL", "PETER", "PHASE", "PHONE", "PHOTO", "PIANO", "PICKS", "PIECE",
+            "PIERS", "PIETY", "PIGGY", "PILOT", "PINCH", "PINES", "PINGY", "PINTO", "PIPER", "PIPES",
+            "PISMO", "PITCH", "PITTS", "PIVOT", "PIXIE", "PLACE", "PLAIN", "PLANK", "PLANS", "PLANT",
+            "PLATE", "PLATO", "PLAYS", "PLEAD", "PLEAT", "PLIES", "PLINK", "PLODS", "PLOTS", "PLUCK",
+            "PLUMB", "PLUME", "PLUMP", "PLUNK", "PLUSH", "POACH", "POEMS", "POINT", "POISE", "POKER",
+            "POLAR", "POLES", "POLIO", "POLKA", "POLLS", "PONDS", "PONYF", "POOCH", "POOLS", "POORLY",
+            "POPEY", "POPPA", "PORCH", "PORES", "PORGY", "PORTS", "POSER", "POSES", "POTTY", "POUCH",
+            "POUND", "POWER", "PRANK", "PRAWN", "PREEN", "PREPS", "PRESS", "PRICE", "PRICK", "PRIDE",
+            "PRIME", "PRINT", "PRIOR", "PRISM", "PRIVY", "PRIZE", "PROBE", "PRODS", "PROFY", "PROMP",
+            "PRONE", "PRONG", "PROOF", "PROPS", "PROSE", "PROUD", "PROVE", "PROWL", "PRUNE", "PSALM",
+            "PUFFY", "PULPY", "PULSE", "PUNCH", "PUPIL", "PUPPY", "PUREE", "PURGE", "PURSE", "PUSHY",
+            "QUACK", "QUAKE", "QUALM", "QUASH", "QUASI", "QUEEN", "QUELL", "QUERY", "QUEST", "QUEUE",
+            "QUICK", "QUIET", "QUILL", "QUILT", "QUIRK", "QUITE", "QUITS", "QUOTA", "QUOTE", "RABBI",
+            "RABID", "RACES", "RACER", "RADIO", "RADON", "RAILS", "RAINS", "RAISE", "RALLY", "RAMPS",
+            "RANCH", "RANDY", "RANGE", "RANKY", "RAPID", "RARER", "RASEL", "RASHY", "RATED", "RATES",
+            "RATIO", "RAVEN", "RAWER", "RAZOR", "REACH", "REACT", "READY", "REALM", "REAMS", "REAPS",
+            "REARS", "REBEL", "REBUS", "REBUT", "RECALL", "RECAP", "RECUT", "REDDY", "REEDS", "REEFS",
+            "REELS", "REFER", "REFIT", "REFUS", "REGAL", "REHAB", "REIGN", "REINS", "RELAX", "RELAY",
+            "RELIC", "REMED", "REMIF", "REMOP", "RENAL", "RENDS", "RENTS", "REPAY", "REPEL", "REPLY",
+            "REPRO", "REPUT", "RESCU", "RESET", "RESIN", "RESOW", "RESTS", "RETRY", "REVEL", "REVUE",
+            "REWIN", "RHINO", "RHYME", "RICER", "RICES", "RIDGE", "RIFLE", "RIGHT", "RIGID", "RIGOR",
+            "RILED", "RILES", "RINSE", "RIPER", "RISEN", "RISES", "RISKY", "RIVAL", "RIVER", "ROADS",
+            "ROAMS", "ROARS", "ROAST", "ROBES", "ROBIN", "ROBOT", "ROCKY", "RODEO", "ROGER", "ROGUE",
+            "ROILS", "ROLES", "ROLLS", "ROMAN", "ROMPS", "ROOFS", "ROOMY", "ROOST", "ROOTS", "ROPES",
+            "ROSEY", "ROUGH", "ROUND", "ROUSE", "ROUTS", "ROVER", "ROWDY", "ROYAL", "RUDDY", "RUDER",
+            "RUGBY", "RUINS", "RULES", "RUMMY", "RUMOR", "RUNNY", "RURAL", "RUSTY", "SABER", "SACKS",
+            "SADLY", "SAFES", "SAGGY", "SAINT", "SALAD", "SALTY", "SALVE", "SANDS", "SANER", "SAPPY",
+            "SARGE", "SATIN", "SAUCY", "SAVED", "SAVER", "SAVES", "SAVOR", "SCALD", "SCALP", "SCAMP",
+            "SCANS", "SCANT", "SCARE", "SCARF", "SCARY", "SCENE", "SCENT", "SCOFF", "SCOLD", "SCONE",
+            "SCOOP", "SCOOT", "SCOPE", "SCORE", "SCORN", "SCOUR", "SCOUT", "SCRAP", "SCREW", "SCRUB",
+            "SCUBA", "SEAMS", "SEATS", "SEDAN", "SEEDS", "SEEKS", "SEEMS", "SEIZE", "SELDOM", "SELLA",
+            "SELLS", "SENSE", "SERGE", "SERIF", "SERVE", "SETTL", "SEVEN", "SEVER", "SEWER", "SHACK",
+            "SHADE", "SHADY", "SHAFT", "SHAKE", "SHAKY", "SHALL", "SHAME", "SHANK", "SHAPE", "SHARE",
+            "SHARK", "SHARP", "SHAVE", "SHAWL", "SHEAF", "SHEAR", "SHEEN", "SHEEP", "SHEER", "SHELF",
+            "SHELL", "SHIED", "SHIER", "SHIES", "SHIFT", "SHINE", "SHINY", "SHIPS", "SHIRT", "SHOCK",
+            "SHOES", "SHOOK", "SHOOT", "SHORE", "SHORT", "SHOTS", "SHOUT", "SHOVE", "SHOWN", "SHOWS",
+            "SHRED", "SHREW", "SHRUB", "SHRUG", "SHUNS", "SHUTS", "SICKO", "SIDES", "SIEGE", "SIGHT",
+            "SIGNS", "SILKY", "SILLY", "SILOS", "SINCE", "SINEW", "SINGE", "SIPPY", "SIREN", "SIXTH",
+            "SKATE", "SKEIN", "SKIER", "SKIES", "SKIMP", "SKINS", "SKIPS", "SKIRT", "SLACK", "SLAIN",
+            "SLAMS", "SLANG", "SLANT", "SLASH", "SLATE", "SLAVE", "SLEEK", "SLEEP", "SLEET", "SLEPT",
+            "SLICE", "SLICK", "SLIDE", "SLING", "SLINK", "SLIPS", "SLITS", "SLOPE", "SLOSH", "SLOTH",
+            "SLUMP", "SLUNG", "SLUNK", "SLURP", "SLUSH", "SMALL", "SMART", "SMASH", "SMEAR", "SMELL",
+            "SMELT", "SMILE", "SMIRK", "SMITH", "SMOCK", "SMOGS", "SMOKE", "SMOKY", "SMOTE", "SNACK",
+            "SNAIL", "SNAKE", "SNAKY", "SNAPS", "SNARE", "SNARL", "SNIFF", "SNIPS", "SNOOP", "SNORE",
+            "SNORT", "SNOUT", "SNOWY", "SNUBS", "SNUFF", "SOAKY", "SOAPS", "SOAPY", "SOARS", "SOCKS",
+            "SOGGY", "SOILS", "SOLAR", "SOLID", "SOLVE", "SONAR", "SONGS", "SONIC", "SOOTH", "SOPPY",
+            "SORRY", "SOUND", "SOUPS", "SOURS", "SOUTH", "SOWED", "SPACE", "SPADE", "SPANK", "SPARE",
+            "SPARK", "SPASM", "SPAWN", "SPEAK", "SPEAR", "SPECK", "SPEED", "SPELL", "SPEND", "SPENT",
+            "SPICE", "SPICY", "SPIED", "SPIES", "SPIKE", "SPIKY", "SPILL", "SPINE", "SPINS", "SPIRIT",
+            "SPITE", "SPLIT", "SPOIL", "SPOKE", "SPOOF", "SPOOK", "SPOOL", "SPORT", "SPOTY", "SPOTS",
+            "SPRAY", "SPREE", "SPRIG", "SPRING", "SPRIT", "SPURT", "SQUAD", "SQUAT", "STAFF", "STAGE",
+            "STAID", "STAIN", "STAIR", "STAKE", "STALE", "STALK", "STALL", "STAMP", "STAND", "STANK",
+            "STARE", "STARK", "START", "STATE", "STAVE", "STEAD", "STEAK", "STEAL", "STEAM", "STEED",
+            "STEEL", "STEEP", "STEER", "STEMS", "STERN", "STICK", "STIFF", "STILL", "STING", "STINK",
+            "STIRF", "STIRS", "STOCK", "STOIC", "STOKE", "STOLE", "STOMP", "STONE", "STONY", "STOOD",
+            "STOOL", "STOOP", "STORE", "STORK", "STORM", "STORY", "STOUT", "STOVE", "STRAP", "STRAW",
+            "STRAY", "STREW", "STRIP", "STRODE", "STROKE", "STROLL", "STUMP", "STUNG", "STUNK", "SUGAR",
+            "SUITE", "SULKY", "SULLY", "SUMAC", "SUNNY", "SUPER", "SURER", "SURGE", "SWAMI", "SWAMP",
+            "SWANS", "SWARM", "SWASH", "SWATH", "SWEAR", "SWEAT", "SWEEP", "SWEET", "SWELL", "SWIFT",
+            "SWILL", "SWIMS", "SWINE", "SWING", "SWIRL", "SWISH", "SWORN", "SWUNG", "SYRUP", "TABLE",
+            "TACOS", "TAINT", "TAKEN", "TALKS", "TALLS", "TALLY", "TAMED", "TAMER", "TAMES", "TANGY",
+            "TAPED", "TAPES", "TAROT", "TASTE", "TASTY", "TATTY", "TAUNT", "TAXES", "TEACH", "TEAMS",
+            "TEARS", "TEASE", "TEETH", "TELLF", "TELLS", "TEMPO", "TENDS", "TENSE", "TERMS", "TESTS",
+            "TEXAS", "THANK", "THEFT", "THEIR", "THEME", "THICK", "THIEF", "THIGH", "THING", "THINK",
+            "THIRD", "THORN", "THOSE", "THREE", "THREW", "THROB", "THROW", "THUMB", "THUMP", "THUSF",
+            "THYME", "TIARA", "TIBIA", "TIDAL", "TIDED", "TIDES", "TIGHT", "TILED", "TILES", "TILLS",
+            "TILTS", "TIMED", "TIMER", "TIMES", "TIMID", "TINGE", "TINNY", "TINTS", "TIRED", "TIRES",
+            "TISSUE", "TITLE", "TOAST", "TODAY", "TOKEN", "TOMBS", "TONAL", "TONGS", "TONIC", "TOOLS",
+            "TOPIC", "TORCH", "TORSO", "TOTAL", "TOUCH", "TOUGH", "TOWEL", "TOWER", "TOXIC", "TRACE",
+            "TRACK", "TRACT", "TRADE", "TRAIL", "TRAIN", "TRAIT", "TRAMP", "TRASH", "TRAWL", "TREAD",
+            "TREAT", "TREES", "TREND", "TRIAD", "TRIAL", "TRIBE", "TRICK", "TRITE", "TROOP", "TROPE",
+            "TRUCK", "TRULY", "TRUMP", "TRUNK", "TRUST", "TRUTH", "TRYST", "TUBAL", "TULIP", "TUMMY",
+            "TUNIC", "TURBO", "TURFY", "TURNS", "TUTOR", "TWICE", "TWINE", "TWINS", "TWIRL", "TWIST",
+            "TYING", "UDDER", "ULTRA", "UMBER", "UNFIT", "UNIFY", "UNION", "UNITE", "UNITY", "UNLIT",
+            "UNTIL", "UPPER", "UPSET", "URBAN", "URGED", "URGES", "USAGE", "USHER", "USUAL", "USURP",
+            "UTTER", "VACAY", "VAGUE", "VALET", "VALID", "VALUE", "VAPID", "VAULT", "VEGAN", "VEINS",
+            "VELLA", "VENOM", "VENUE", "VERGE", "VERSE", "VERVE", "VEXED", "VEXES", "VIBES", "VICEF",
+            "VIDEO", "VIEWS", "VIGOR", "VILLA", "VINES", "VINYL", "VIOLA", "VIRAL", "VIRTU", "VISAS",
+            "VISIT", "VITAL", "VIVID", "VOCAL", "VOGUE", "VOICE", "VOIDF", "VOIDS", "VOLTS", "VOMIT",
+            "VOTED", "VOTER", "VOTES", "VOWEL", "VOWS", "WACKY", "WADED", "WADES", "WAGED", "WAGES",
+            "WAGON", "WAIST", "WAITS", "WAIVE", "WALKS", "WALLS", "WALTZ", "WANTS", "WARMS", "WARNS",
+            "WASTE", "WATCH", "WATER", "WATTS", "WAVED", "WAVES", "WEAKF", "WEAKN", "WEARS", "WEAVE",
+            "WEEDY", "WEEKS", "WEIGH", "WEIRD", "WELCH", "WELLF", "WELLS", "WETLY", "WHALE", "WHARF",
+            "WHEAT", "WHEEL", "WHELP", "WHERE", "WHICH", "WHIFF", "WHILE", "WHITE", "WHOLE", "WHOOP",
+            "WIDER", "WIDOW", "WIDTH", "WIELD", "WIGGL", "WILDY", "WILLS", "WINCE", "WINDS", "WINED",
+            "WINES", "WINGY", "WINGS", "WIPED", "WIPES", "WIRED", "WIRES", "WISHY", "WITCH", "WITHS",
+            "WIVES", "WOOED", "WOODS", "WOOLY", "WORDS", "WORKS", "WORLD", "WORMS", "WORRY", "WORSE",
+            "WORST", "WORTH", "WOULD", "WOUND", "WOVEN", "WRAPS", "WRATH", "WRECK", "WREST", "WRING",
+            "WRITE", "WRONG", "WROTE", "YACHT", "YANKY", "YARDS", "YEARN", "YEARS", "YEAST", "YELLS",
+            "YIELD", "YOUNG", "YOURS", "YOUTH", "ZEBRA", "ZEROS", "ZINGY", "ZONAL"
+        ].filter(word => word.length === 5); 
+
+        const regularWordleWords6 = [
+            "ABACUS", "ABANDON", "ABATED", "ABATES", "ABATIS", "ABATOR", "ABAXIAL", "ABDOMEN", "ABDUCT", "ABETOR",
+            "ABEYED", "ABHORR", "ABIDED", "ABIDER", "ABIDES", "ABJECT", "ABJURE", "ABLATE", "ABLAZE", "ABLOOM",
+            "ABLYES", "ABNORMAL", "ABOARD", "ABOLISH", "ABORTED", "ABOUND", "ABOUTS", "ABRADE", "ABROAD", "ABROOK",
+            "ABRUPT", "ABSENT", "ABSOLVE", "ABSORB", "ABSTAIN", "ABSUME", "ABSURD", "ABUSED", "ABUSER", "ABUSES",
+            "ABUTAL", "ABUTTED", "ABYSMAL", "ACCEDE", "ACCENT", "ACCEPT", "ACCESS", "ACCORD", "ACCOST", "ACCRUE",
+            "ACCURSED", "ACCUSE", "ACERBIC", "ACIDIC", "ACIDLY", "ACINAR", "ACOLYTE", "ACORNED", "ACOUSTIC", "ACQUIT",
+            "ACROSS", "ACTING", "ACTION", "ACTIVE", "ACTUAL", "ACUATE", "ACUMEN", "ACUTELY", "ADAGIO", "ADAMANT",
+            "ADAPTS", "ADDEND", "ADDERS", "ADDICT", "ADDLED", "ADDUCE", "ADEPTLY", "ADHERE", "ADIEUS", "ADIPOSE",
+            "ADJOIN", "ADJOURN", "ADJUDGE", "ADJUST", "ADMIRAL", "ADMIRED", "ADMIRER", "ADMIRES", "ADMITT", "ADOBE",
+            "ADOPTED", "ADOPTIVE", "ADORABLY", "ADORNED", "ADRIFT", "ADROIT", "ADULATE", "ADULTLY", "ADVANCE", "ADVICE",
+            "ADVISE", "ADVISOR", "AERIAL", "AEROBIC", "AEROFOIL", "AESTHETE", "AFFAIR", "AFFECT", "AFFIRM", "AFFIXED",
+            "AFFORD", "AFFRAY", "AFFRONT", "AFLOAT", "AFOOT", "AFORE", "AFRAID", "AFRESH", "AGENCY", "AGENDA",
+            "AGGRESS", "AGILELY", "AGITATE", "AGLOW", "AGNOSTIC", "AGREED", "AHEAD", "AHOY", "AIDING", "AILMENT",
+            "AIMING", "AIRBORNE", "AIRPORT", "AIRWAY", "ALABAM", "ALARMED", "ALBEIT", "ALCOHOL", "ALERTLY", "ALGAE",
+            "ALGEBRA", "ALIENS", "ALIGHT", "ALIGNED", "ALIKE", "ALLEGE", "ALLEGRO", "ALLIED", "ALLIES", "ALLOTED",
+            "ALLOWED", "ALLOYED", "ALLUDE", "ALLURE", "ALMOND", "ALMOST", "ALOUD", "ALPHAS", "ALREADY", "ALRIGHT",
+            "ALTERED", "ALTHOUGH", "ALTITUDE", "ALTRUISM", "ALWAYS", "AMALGAM", "AMASSES", "AMATEUR", "AMAZED", "AMAZING",
+            "AMBIENT", "AMBLED", "AMBUSH", "AMENDED", "AMENITY", "AMIDST", "AMNESIA", "AMOEBA", "AMORAL", "AMOUNT",
+            "AMPLIFY", "AMPUTATE", "AMUSED", "AMUSING", "ANALOGY", "ANALYSIS", "ANARCHY", "ANATOMY", "ANCHOR", "ANCIENT",
+            "ANDIRON", "ANEMONE", "ANGINA", "ANGLED", "ANGLER", "ANGLES", "ANGRILY", "ANGUISH", "ANIMAL", "ANIMATE",
+            "ANNOYED", "ANNUAL", "ANODIC", "ANOMALY", "ANTHEM", "ANTHRAX", "ANTIBODY", "ANTICS", "ANTIQUE", "ANTLER",
+            "ANVILS", "ANYONE", "ANYTHING", "ANYWAY", "APACHE", "APART", "APHIDS", "APIECE", "APLOMB", "APOLOGY",
+            "APPAREL", "APPEAL", "APPEAR", "APPLAUD", "APPLIED", "APPLIES", "APPOINT", "APPROACH", "APPROVED", "APRONED",
+            "APTLY", "ARABIC", "ARBITER", "ARBOR", "ARCADE", "ARCHED", "ARCHER", "ARCHIVE", "ARCTIC", "ARDENT",
+            "ARDUOUS", "ARENAS", "ARGENT", "ARGUE", "ARIDLY", "ARIGHT", "ARMADA", "ARMED", "ARMIES", "ARMING",
+            "ARMORER", "ARMORY", "AROMATIC", "AROUND", "AROUSE", "ARRAIGN", "ARRANGE", "ARRAYED", "ARREST", "ARRIVAL",
+            "ARRIVE", "ARROWS", "ARSENAL", "ARTFUL", "ARTIST", "ARTISTIC", "ASCEND", "ASCENT", "ASCRIBE", "ASHEN",
+            "ASIDE", "ASLEEP", "ASPECT", "ASPIRE", "ASSAULT", "ASSEMBLE", "ASSENT", "ASSERT", "ASSESS", "ASSETS",
+            "ASSIGN", "ASSIST", "ASSUME", "ASSURED", "ASTERN", "ASTEROID", "ASTHMA", "ASTIR", "ASTOUND", "ASTRIDE",
+            "ATHEIST", "ATHLETE", "ATLASES", "ATTACH", "ATTACK", "ATTAIN", "ATTEMPT", "ATTEND", "ATTIRE", "ATTITUDE",
+            "ATTRACT", "AUDIBLE", "AUDIENCE", "AUDIT", "AUGMENT", "AUGUST", "AUNTIE", "AURORA", "AUSPICE", "AUSTERE",
+            "AUTHOR", "AUTISM", "AUTUMN", "AVAIL", "AVALANCHE", "AVENGED", "AVENGER", "AVENGES", "AVENUE", "AVERAGE",
+            "AVERTED", "AVIARY", "AVIDLY", "AVOIDS", "AVOWED", "AWAKEN", "AWARDED", "AWARELY", "AWAY", "AWESOME",
+            "AWFULLY", "AWHILE", "AWKWARD", "AXIOMS", "AZURE", "BABBLE", "BABIES", "BABOON", "BACKED", "BACKER",
+            "BACKLOG", "BACKUP", "BADGER", "BADLY", "BAFFLE", "BAGELS", "BAGGED", "BAGGER", "BAGGY", "BAILOUT",
+            "BAITED", "BALANCED", "BALCONY", "BALDLY", "BALLAD", "BALLOT", "BALSAM", "BAMBOO", "BANDED", "BANDIT",
+            "BANDY", "BANGED", "BANGLE", "BANKER", "BANKING", "BANNER", "BANQUET", "BANTAM", "BARBED", "BARBER",
+            "BARELY", "BARGAIN", "BARGES", "BARKING", "BARLEY", "BARMAN", "BARRED", "BARREL", "BARREN", "BARRIER",
+            "BARROW", "BASEBALL", "BASED", "BASELY", "BASICS", "BASIL", "BASIN", "BASKET", "BASSES", "BASSOON",
+            "BASTION", "BATCHED", "BATHED", "BATHING", "BATHROOM", "BATTER", "BATTLE", "BAUBLE", "BAWDY", "BAYING",
+            "BAYONET", "BAZAAR", "BEACHED", "BEACON", "BEADED", "BEAGLE", "BEAKER", "BEAMED", "BEAMING", "BEANIE",
+            "BEARING", "BEASTLY", "BEATEN", "BEATER", "BEAUTY", "BEAVER", "BECOME", "BEDDED", "BEDDING", "BEDLAM",
+            "BEDPAN", "BEDPOST", "BEDROCK", "BEDROOM", "BEDSIDE", "BEEFED", "BEEHIVE", "BEFALL", "BEFORE", "BEGAN",
+            "BEGGAR", "BEGGED", "BEGGING", "BEHALF", "BEHAVE", "BEHEAD", "BEHELD", "BEHIND", "BEHOLD", "BELIEF",
+            "BELIEVE", "BELITTLE", "BELLED", "BELLES", "BELLIED", "BELLOW", "BELONG", "BELOVED", "BELTED", "BEMOAN",
+            "BEMUSED", "BENCHED", "BENDED", "BENDER", "BENEATH", "BENEFIT", "BENIGN", "BENTLY", "BERATE", "BEREFT",
+            "BERET", "BERRIES", "BERTHS", "BESIDE", "BESIEGE", "BESTED", "BESTIAL", "BESTIR", "BESTOW", "BETAKE",
+            "BETHINK", "BETIDE", "BETRAY", "BETTER", "BETWEEN", "BEVEL", "BEWAIL", "BEWARE", "BEYOND", "BIASING",
+            "BICKER", "BICYCLE", "BIDDEN", "BIDDER", "BIGGER", "BIGOTRY", "BIKINI", "BILGED", "BILLED", "BILLOW",
+            "BIMINI", "BINDER", "BINDING", "BINGED", "BINGES", "BIOMASS", "BIOTIC", "BIPEDAL", "BIRCHED", "BIRDIE",
+            "BIRTHED", "BISCUIT", "BISECT", "BISHOP", "BITING", "BITTER", "BLABBER", "BLACED", "BLACKEN", "BLADDER",
+            "BLAMED", "BLAMES", "BLANCH", "BLANKET", "BLASTED", "BLAZED", "BLAZER", "BLAZES", "BLEACH", "BLEARY",
+            "BLEATED", "BLEEDING", "BLEMISH", "BLENDED", "BLESSING", "BLIGHT", "BLIMPED", "BLINDED", "BLINDER", "BLINDLY",
+            "BLINKER", "BLISSFUL", "BLISTER", "BLOATED", "BLOCKED", "BLOODED", "BLOOMED", "BLOSSOM", "BLOTTED", "BLOUSE",
+            "BLOWING", "BLOWOUT", "BLUESY", "BLUFFED", "BLUNDER", "BLUNTED", "BLURRED", "BLURRY", "BLUSHED", "BOARDED",
+            "BOARDING", "BOASTED", "BOASTER", "BOATING", "BODIED", "BODIES", "BOGGED", "BOILER", "BOLDLY", "BOLTED",
+            "BOMBED", "BOMBER", "BONBON", "BONDAGE", "BONDED", "BONDER", "BONNET", "BONNIE", "BONUSES", "BOOBIE",
+            "BOOKED", "BOOKER", "BOOKING", "BOOMED", "BOOMING", "BOONIE", "BOOSTER", "BOOTED", "BOOTIES", "BOOTING",
+            "BOOTLEG", "BORDER", "BOREDOM", "BORING", "BORROW", "BOSOM", "BOSSED", "BOSSES", "BOTANY", "BOTCHED",
+            "BOTHER", "BOTTLE", "BOTTOM", "BOULEVARD", "BOUNCED", "BOUNCER", "BOUNCY", "BOUNDED", "BOUNDARY", "BOUNTY",
+            "BOUQUET", "BOURBON", "BOVINE", "BOWELS", "BOWING", "BOWLER", "BOWLING", "BOXCAR", "BOXED", "BOXER",
+            "BOYCOTT", "BRACED", "BRACES", "BRACKET", "BRAGGED", "BRAIDED", "BRAILLE", "BRAINS", "BRAKED", "BRAKES",
+            "BRANCH", "BRANDED", "BRANDING", "BRASHLY", "BRASSY", "BRAVELY", "BRAVERY", "BRAWLED", "BRAWLER", "BRAZIER",
+            "BREADED", "BREADTH", "BREAKAGE", "BREAKER", "BREAST", "BREATH", "BREEDER", "BREEDING", "BREEZE", "BREEZY",
+            "BREVITY", "BREWING", "BRIBERY", "BRICKED", "BRIDAL", "BRIDGED", "BRIDGES", "BRIEFED", "BRIEFLY", "BRIGHT",
+            "BRINGING", "BRISKLY", "BRITTLE", "BROADEN", "BROADLY", "BROCCOLI", "BROCHURE", "BROILED", "BROKEN", "BROKER",
+            "BRONZE", "BROODED", "BROOM", "BROTHER", "BROWNED", "BROWSER", "BRUISED", "BRUISES", "BRUSHED", "BRUSQUE",
+            "BRUTAL", "BUBBLE", "BUBBLY", "BUCKET", "BUCKLE", "BUDGET", "BUFFALO", "BUFFER", "BUFFET", "BUGGED",
+            "BUGGY", "BUILDER", "BUILDING", "BULGED", "BULGES", "BULKED", "BULKY", "BULLET", "BULLIED", "BULLION",
+            "BULLISH", "BUMBLE", "BUMPED", "BUMPER", "BUMPY", "BUNDLE", "BURDEN", "BUREAU", "BURIAL", "BURNED",
+            "BURNER", "BURNING", "BURROW", "BURSTING", "BUSHEL", "BUSHES", "BUSHY", "BUSINESS", "BUSTED", "BUSTER",
+            "BUSTLE", "BUSYING", "BUTCHER", "BUTLER", "BUTTER", "BUTTON", "BUZZED", "BUZZER", "BYGONE", "BYPASS",
+            "BYPLAY", "CABANA", "CABBAGE", "CABINET", "CABLED", "CABLES", "CACHED", "CACHES", "CADAVER", "CADENCE",
+            "CADETS", "CAESAR", "CAFETERIA", "CAGEY", "CAIRNS", "CAJOLE", "CAKED", "CALAMITY", "CALCIUM", "CALCULATE",
+            "CALDRON", "CALENDAR", "CALICO", "CALLED", "CALLER", "CALLING", "CALMLY", "CALORIES", "CAMELOT", "CAMERA",
+            "CAMPED", "CAMPER", "CAMPING", "CAMPUS", "CANALS", "CANDID", "CANDLE", "CANDOR", "CANNED", "CANNON",
+            "CANNOT", "CANOEING", "CANOPY", "CANVAS", "CANYON", "CAPABLE", "CAPITAL", "CAPTAIN", "CAPTIVE", "CAPTURE",
+            "CARAVAN", "CARBON", "CARCASS", "CARDINAL", "CAREFUL", "CARESS", "CARGO", "CARGOES", "CARIBOU", "CARING",
+            "CAROUSEL", "CARPET", "CARRIAGE", "CARRIER", "CARTEL", "CARTER", "CARTON", "CARVED", "CARVER", "CARVES",
+            "CASING", "CASINO", "CASKET", "CASTED", "CASTER", "CASTING", "CASTLE", "CASUAL", "CATALOG", "CATCHER",
+            "CATCHING", "CATEGORY", "CATERED", "CATHEDRAL", "CATHODE", "CATTLE", "CAUGHT", "CAUSAL", "CAUSED", "CAUSES",
+            "CAUTION", "CAVALRY", "CAVERN", "CAVING", "CEASED", "CEASES", "CEDARS", "CEILING", "CELEBRATE", "CELLAR",
+            "CELLED", "CELLIST", "CEMENT", "CENSER", "CENSOR", "CENSUS", "CENTER", "CENTRAL", "CENTURY", "CERAMIC",
+            "CEREAL", "CEREMONY", "CERTAIN", "CERTIFY", "CHAFED", "CHAGRIN", "CHAINED", "CHAINS", "CHAIRED", "CHALICE",
+            "CHALLENGE", "CHAMBER", "CHAMPION", "CHANCE", "CHANGED", "CHANGER", "CHANGES", "CHANNEL", "CHANSON", "CHANTING",
+            "CHAPEL", "CHAPTER", "CHARGED", "CHARGES", "CHARIOT", "CHARITY", "CHARMED", "CHARMING", "CHARTED", "CHARTER",
+            "CHASED", "CHASER", "CHASES", "CHASM", "CHASTE", "CHATTED", "CHATTER", "CHEAPLY", "CHEATED", "CHEATER",
+            "CHECKED", "CHECKER", "CHECKING", "CHEEKED", "CHEERFUL", "CHEERING", "CHEERS", "CHEESE", "CHEMICAL", "CHEMIST",
+            "CHERISH", "CHERRY", "CHESSES", "CHESTS", "CHICKEN", "CHIDING", "CHIEFLY", "CHILDISH", "CHILLED", "CHILLY",
+            "CHIMES", "CHIMNEY", "CHIPPED", "CHIRPED", "CHISEL", "CHIVALRY", "CHLORINE", "CHOICE", "CHOICES", "CHOKED",
+            "CHOKER", "CHOKES", "CHOPPED", "CHOPPER", "CHORAL", "CHORDED", "CHORED", "CHORES", "CHOSEN", "CHOWDER",
+            "CHRONIC", "CHUCKLE", "CHURNED", "CICADA", "CIDER", "CINDER", "CINEMA", "CIPHER", "CIRCLED", "CIRCLES",
+            "CIRCUIT", "CIRCULAR", "CIRCUS", "CISTERN", "CITED", "CITIES", "CITIZEN", "CITRUS", "CIVIC", "CIVIL",
+            "CLAIMED", "CLAMOR", "CLAMPED", "CLANGED", "CLANKED", "CLAPPED", "CLAPPER", "CLARIFY", "CLARION", "CLARITY",
+            "CLASHED", "CLASHES", "CLASPED", "CLASSED", "CLASSES", "CLASSIC", "CLASSIFY", "CLATTER", "CLEANED", "CLEANER",
+            "CLEANLY", "CLEANSE", "CLEARED", "CLEARLY", "CLEAVAGE", "CLEAVER", "CLEFT", "CLENCHED", "CLERGY", "CLEVER",
+            "CLICKED", "CLIENT", "CLIFFS", "CLIMATE", "CLIMBED", "CLIMBER", "CLINCH", "CLINGING", "CLINIC", "CLINKED",
+            "CLIPPED", "CLIPPER", "CLOAKED", "CLOCKED", "CLOGGED", "CLOISTER", "CLONED", "CLONES", "CLOSED", "CLOSER",
+            "CLOSES", "CLOSET", "CLOSING", "CLOTHED", "CLOTHES", "CLOUDY", "CLOUTED", "CLOVER", "CLOWNED", "CLUBBED",
+            "CLUMPED", "CLUMSY", "CLUSTERED", "COACHED", "COACHES", "COALITION", "COARSE", "COASTAL", "COATED", "COATING",
+            "COAXED", "COAXES", "COBALT", "COBBLE", "COBRA", "COCAINE", "COCKED", "COCKPIT", "COCKTAIL", "COCOON",
+            "CODED", "CODER", "CODES", "COERCE", "COFFEE", "COFFIN", "COGNATE", "COHERENT", "COHORT", "COILED",
+            "COILING", "COINED", "COINCIDE", "COLANDER", "COLDLY", "COLLAGE", "COLLAPSE", "COLLECT", "COLLEGE", "COLLIDE",
+            "COLLIER", "COLLINS", "COLONEL", "COLONIAL", "COLORED", "COLOSSAL", "COLUMN", "COMBAT", "COMBED", "COMBINE",
+            "COMEDY", "COMFORT", "COMMAND", "COMMENCE", "COMMEND", "COMMENT", "COMMERCE", "COMMIT", "COMMON", "COMMUNE",
+            "COMPACT", "COMPARE", "COMPEL", "COMPLAIN", "COMPLETE", "COMPLEX", "COMPLY", "COMPOSE", "COMPOUND", "COMPRISE",
+            "COMPUTED", "CONCAVE", "CONCEDE", "CONCEIVE", "CONCEPT", "CONCERN", "CONCERT", "CONCLUDE", "CONCORD", "CONCRETE",
+            "CONDEMN", "CONDENSE", "CONDUCT", "CONFER", "CONFIDE", "CONFINE", "CONFIRM", "CONFLICT", "CONFORM", "CONFUSE",
+            "CONGEAL", "CONGENIAL", "CONGESTED", "CONICAL", "CONJOIN", "CONNECT", "CONNIVE", "CONQUER", "CONSENT", "CONSERVE",
+            "CONSIDER", "CONSIST", "CONSOLE", "CONSONANT", "CONSORT", "CONSTANT", "CONSULT", "CONSUME", "CONTACT", "CONTAIN",
+            "CONTEMPT", "CONTEND", "CONTENT", "CONTEST", "CONTEXT", "CONTINUE", "CONTOUR", "CONTRACT", "CONTROL", "CONTROLS",
+            "CONVENE", "CONVERGE", "CONVERSE", "CONVERT", "CONVEY", "CONVICT", "CONVINCE", "CONVOKE", "COOKED", "COOKER",
+            "COOKING", "COOLED", "COOLER", "COOLING", "COOPER", "COPIED", "COPIER", "COPIES", "COPING", "COPPER",
+            "COPPING", "CORAL", "CORDED", "CORDIAL", "COREED", "CORNER", "CORNET", "COROLLA", "CORONER", "CORONET",
+            "CORRECT", "CORRODE", "CORRUPT", "CORTEX", "COSMIC", "COSTLY", "COTTON", "COUCHED", "COUGAR", "COUGHED",
+            "COUNCIL", "COUNSEL", "COUNTED", "COUNTER", "COUNTRY", "COUNTY", "COUPLE", "COUPON", "COURAGE", "COURSE",
+            "COURTLY", "COUSIN", "COVERED", "COVERING", "COVERT", "COVETED", "COWARD", "COWBOY", "COWERED", "CRACKED",
+            "CRACKER", "CRADLE", "CRAFTED", "CRAFTER", "CRAMPED", "CRANE", "CRANIUM", "CRANKED", "CRASHED", "CRASHES",
+            "CRATER", "CRAVED", "CRAVES", "CRAWLED", "CRAWLER", "CRAZED", "CRAZILY", "CREAKED", "CREAMY", "CREATED",
+            "CREATES", "CREATOR", "CREDIT", "CREED", "CREEK", "CREEPING", "CREEPY", "CREMATE", "CREOLE", "CRESCENT",
+            "CRESTED", "CRICKET", "CRIED", "CRIER", "CRIMES", "CRIMSON", "CRINGED", "CRINGES", "CRINKLE", "CRINKLY",
+            "CRISPED", "CRISPY", "CRITERIA", "CRITIC", "CROAKED", "CROCHET", "CRONIES", "CROOKED", "CROPPER", "CROSSED",
+            "CROSSES", "CROSSING", "CROUCH", "CROWDED", "CROWING", "CROWNED", "CRUCIAL", "CRUELLY", "CRUISER", "CRUMBLE",
+            "CRUMBLY", "CRUMPET", "CRUSHED", "CRUSHES", "CRUSTED", "CRUTCH", "CRYING", "CRYSTAL", "CUBICLE", "CUCUMBER",
+            "CUDDLED", "CUDDLY", "CULPRIT", "CULTURE", "CUNNING", "CUPPED", "CURATED", "CURATOR", "CURIOUS", "CURLED",
+            "CURRENCY", "CURRENT", "CURSED", "CURSES", "CURTAIN", "CURVED", "CURVES", "CUSHION", "CUSTODY", "CUSTOM",
+            "CUTTER", "CUTTING", "CYCLES", "CYGNET", "CYLINDER", "CYNIC", "CYPRESS", "DAFFODIL", "DAFTLY", "DAGGER",
+            "DAILY", "DAINTY", "DAISIES", "DAMAGED", "DAMAGES", "DAMPEN", "DANCER", "DANCES", "DANDRUFF", "DANGER",
+            "DANGLED", "DANKLY", "DARED", "DARES", "DARKLY", "DARLING", "DASHED", "DASHES", "DATED", "DATES",
+            "DAUNTED", "DAUNTING", "DAWN", "DAZZLE", "DEACON", "DEADEN", "DEADLY", "DEAFEN", "DEALER", "DEALING",
+            "DEALT", "DEARLY", "DEATHLY", "DEBATE", "DEBAUCH", "DEBRIS", "DEBTOR", "DECADES", "DECAYED", "DECEIT",
+            "DECEIVED", "DECENCY", "DECENT", "DECIDED", "DECIDES", "DECIMAL", "DECIPHER", "DECKED", "DECLARE", "DECLINE",
+            "DECORUM", "DECOYED", "DECREASE", "DECREE", "DECRYING", "DEDICATE", "DEEDED", "DEEPLY", "DEER", "DEFEAT",
+            "DEFECT", "DEFEND", "DEFENSE", "DEFERRED", "DEFICIT", "DEFINED", "DEFINES", "DEFINITE", "DEFLATE", "DEFLECT",
+            "DEFORM", "DEFRAUD", "DEFROST", "DEFTLY", "DEGREE", "DEJECTED", "DELAYED", "DELEGATE", "DELETE", "DELIGHT",
+            "DELIVER", "DELUGE", "DELUSION", "DEMAND", "DEMEAN", "DEMISE", "DEMOLISH", "DEMON", "DENIAL", "DENIED",
+            "DENIES", "DENOTE", "DENSITY", "DENTED", "DEPART", "DEPEND", "DEPICT", "DEPLOY", "DEPORT", "DEPOSE",
+            "DEPOSIT", "DEPRESSED", "DEPRIVE", "DEPTHS", "DERANGED", "DERIVE", "DERIVED", "DERIVES", "DESCENT", "DESCRIBE",
+            "DESERT", "DESERVE", "DESIGN", "DESIRE", "DESIRED", "DESIRES", "DESK", "DESPAIR", "DESPITE", "DESTINY",
+            "DESTROY", "DETAIN", "DETECT", "DETEST", "DETHRONE", "DETONATE", "DETRACT", "DEVELOP", "DEVIATE", "DEVICE",
+            "DEVISES", "DEVOTED", "DEVOTION", "DEVOURED", "DEWORM", "DIABETES", "DIAGNOSE", "DIALED", "DIALOGUE", "DIAMOND",
+            "DIAPER", "DICTATE", "DIFFER", "DIGEST", "DIGGED", "DIGGER", "DIGGING", "DIGITAL", "DIGNITY", "DILEMMA",
+            "DILIGENT", "DIMMED", "DIMMER", "DIMPLE", "DINING", "DIPPED", "DIPPER", "DIRECT", "DIRTILY", "DISABLED",
+            "DISARM", "DISASTER", "DISCARD", "DISCERN", "DISCLOSE", "DISCOUNT", "DISCOVER", "DISCREET", "DISCUSS", "DISEASE",
+            "DISGRACE", "DISGUISE", "DISLIKE", "DISMAL", "DISMAY", "DISMISS", "DISORDER", "DISPATCH", "DISPEL", "DISPERSE",
+            "DISPLAY", "DISPOSE", "DISPUTE", "DISRUPT", "DISSENT", "DISSOLVE", "DISTANCE", "DISTANT", "DISTINCT", "DISTORT",
+            "DISTRACT", "DISTRESS", "DITCHED", "DITCHES", "DIVERGE", "DIVERSE", "DIVERT", "DIVIDED", "DIVIDEND", "DIVIDER",
+            "DIVIDES", "DIVING", "DIVINE", "DIVORCE", "DOABLE", "DOBBER", "DOCILE", "DOCKET", "DOCTOR", "DODGED",
+            "DODGES", "DOGGED", "DOGMA", "DOLLAR", "DOLLOP", "DOMAIN", "DOMESTIC", "DOMINATE", "DONATE", "DONKEY",
+            "DOOMED", "DOOMSDAY", "DOORWAY", "DORMANT", "DOSAGE", "DOUBLE", "DOUBTFUL", "DOUGHNUT", "DRAFTED", "DRAFTER",
+            "DRAGGED", "DRAGNET", "DRAGON", "DRAINED", "DRAINING", "DRAMATIC", "DRAPED", "DRAWER", "DRAWING", "DREADED",
+            "DREADFUL", "DREAMED", "DREAMER", "DREAMING", "DREAMY", "DREARY", "DREDGED", "DREDGER", "DRESSER", "DRESSING",
+            "DRESSED", "DRIFTER", "DRILLING", "DRINKER", "DRINKING", "DRIVEN", "DRIVER", "DRIVING", "DROOPED", "DROPPED",
+            "DROUGHT", "DROWNED", "DRUGGED", "DRUMMED", "DRUNKARD", "DRYING", "DUALISM", "DUCTED", "DUET", "DULLED",
+            "DULLY", "DUMBFOUND", "DUMMY", "DUNGEON", "DUNNED", "DUPLICATE", "DURABLE", "DURING", "DUSKILY", "DUSTED",
+            "DUSTER", "DUTIFUL", "DWARFED", "DWELLER", "DWINDLE", "EAGERNESS", "EARLIER", "EARLIEST", "EARNED", "EARNER",
+            "EARNEST", "EASILY", "EASTERN", "EATING", "EBBING", "EBONY", "ECCENTRIC", "ECHOED", "ECOLOGY", "ECONOMIC",
+            "ECONOMY", "ECSTASY", "EDGED", "EDIBLE", "EDITED", "EDITOR", "EDUCATE", "EERILY", "EFFECT", "EFFORT",
+            "EGGING", "EGOISM", "EIGHTH", "EITHER", "ELABORATE", "ELASTIC", "ELATED", "ELBOWED", "ELDEST", "ELECTED",
+            "ELEGANCE", "ELEGANT", "ELEMENT", "ELEVATED", "ELEVEN", "ELIGIBLE", "ELIMINATE", "ELOQUENT", "ELUDED", "ELUDES",
+            "EMACIATED", "EMANATE", "EMBALM", "EMBANKMENT", "EMBARK", "EMBARRASS", "EMBEDDED", "EMBEZZLE", "EMBLAZON", "EMBODIED",
+            "EMBRACE", "EMBROIDER", "EMERGE", "EMERGENCY", "EMINENT", "EMISSION", "EMOTION", "EMPATHY", "EMPHASIS", "EMPIRE",
+            "EMPLOY", "EMPOWER", "EMPTYING", "ENABLING", "ENACTED", "ENCAMP", "ENCHANTED", "ENCLOSE", "ENCOURAGE", "ENDEAR",
+            "ENDEAVOR", "ENDLESS", "ENDORSE", "ENDOWED", "ENDURANCE", "ENFORCED", "ENGAGED", "ENGAGES", "ENGINE", "ENHANCE",
+            "ENJOYED", "ENJOYING", "ENLARGE", "ENLIGHTEN", "ENLIST", "ENOUGH", "ENRAGED", "ENROLL", "ENSURE", "ENTAILED",
+            "ENTERED", "ENTERING", "ENTIRE", "ENTITLE", "ENTITY", "ENTRANCE", "ENTRAP", "ENTREAT", "ENTRUST", "ENVELOPE",
+            "ENVIED", "ENVIOUS", "ENVISION", "EPICURE", "EPIDEMIC", "EPILOGUE", "EPISODE", "EQUALED", "EQUALITY", "EQUALLY",
+            "EQUATED", "EQUATOR", "EQUIPPED", "EQUITY", "ERADICATE", "ERECTED", "ERODE", "ERODED", "ERRAND", "ERRANT",
+            "ERRATIC", "ERRORS", "ESCALATE", "ESCAPE", "ESCAPED", "ESCAPES", "ESCORT", "ESSAYED", "ESSENCE", "ESTABLISH",
+            "ESTATE", "ESTEEM", "ESTIMATE", "ETERNAL", "ETHEREAL", "ETHICS", "ETHNIC", "EULOGY", "EUREKA", "EVACUATE",
+            "EVADED", "EVADES", "EVALUATE", "EVAPORATE", "EVASION", "EVENLY", "EVENTFUL", "EVERYONE", "EVICTED", "EVIDENCE",
+            "EVIDENT", "EVILISH", "EVOKED", "EVOKES", "EVOLVE", "EXACTLY", "EXAGGERATE", "EXALTED", "EXAMINE", "EXAMPLE",
+            "EXCAVATE", "EXCEEDED", "EXCELLED", "EXCEPT", "EXCERPT", "EXCHANGE", "EXCITED", "EXCITING", "EXCLAIM", "EXCLUDE",
+            "EXCUSE", "EXECUTE", "EXEMPT", "EXHALED", "EXHALES", "EXHAUST", "EXHIBIT", "EXHILARATE", "EXISTED", "EXISTING",
+            "EXODUS", "EXONERATE", "EXPAND", "EXPECT", "EXPELLED", "EXPEND", "EXPENSE", "EXPERT", "EXPLAIN", "EXPLODE",
+            "EXPLOIT", "EXPLORE", "EXPORT", "EXPOSED", "EXPOSURE", "EXPRESS", "EXTEND", "EXTENDED", "EXTENT", "EXTERNAL",
+            "EXTINCT", "EXTRACT", "EXTREME", "EXUBERANT", "EYEBALL", "EYEBROW", "EYELASH", "EYELID", "FABRIC", "FACADE",
+            "FACED", "FACIAL", "FACILE", "FACTOR", "FAILED", "FAILING", "FAILURE", "FAINTED", "FAINTLY", "FAIRLY",
+            "FAITHFUL", "FALCON", "FALLEN", "FALLING", "FALSIFY", "FAMILY", "FAMINE", "FAMOUS", "FANATIC", "FANCIFUL",
+            "FANFARE", "FANNED", "FANTASY", "FARMER", "FARMING", "FASCINATE", "FASHION", "FASTEN", "FATAL", "FATHOM",
+            "FATIGUE", "FAULTY", "FEARFUL", "FEASIBLE", "FEASTING", "FEATHER", "FEATURE", "FEDERAL", "FEDORA", "FEEDBACK",
+            "FEELING", "FELINE", "FELLOW", "FENCE", "FENCING", "FERMENT", "FEROCIOUS", "FERTILE", "FESTIVAL", "FETISH",
+            "FEUDAL", "FEVER", "FIANCE", "FIBER", "FICTION", "FIDDLE", "FIELDED", "FIENDISH", "FIERY", "FIFTEEN",
+            "FIFTH", "FIGHTER", "FIGHTING", "FIGURE", "FILAMENT", "FILED", "FILES", "FILLED", "FILLER", "FILLET",
+            "FILMING", "FILTER", "FINAGLE", "FINALLY", "FINANCE", "FINDER", "FINDING", "FINESSE", "FINGER", "FINISHED",
+            "FINISHING", "FIREARM", "FIREFLY", "FIREMAN", "FIRING", "FIRMLY", "FIRSTLY", "FISCAL", "FISHER", "FISHING",
+            "FITTED", "FITTER", "FITTING", "FIXING", "FIXTURE", "FLACCID", "FLAGGED", "FLAMED", "FLAMING", "FLANKED",
+            "FLANNEL", "FLAPPER", "FLASHED", "FLASHES", "FLATLY", "FLATTEN", "FLAVOR", "FLAWED", "FLAWLESS", "FLEECED",
+            "FLEETLY", "FLEXIBLE", "FLICKER", "FLIGHT", "FLINGING", "FLINTY", "FLIPPED", "FLIPPER", "FLOATED", "FLOATER",
+            "FLOATING", "FLOCKED", "FLOODED", "FLOODING", "FLOORING", "FLOPPED", "FLORAL", "FLORID", "FLOTSAM", "FLOURISH",
+            "FLOWED", "FLOWER", "FLOWING", "FLUENT", "FLUIDLY", "FLUNG", "FLURRY", "FLUSHED", "FLUSTER", "FLUTED",
+            "FLUTTER", "FLYING", "FOAMING", "FOCUSED", "FOGGED", "FOIBLE", "FOILED", "FOLDER", "FOLKED", "FOLLOW",
+            "FOMENT", "FONDLY", "FOOTAGE", "FOOTBALL", "FOOTED", "FOOTING", "FOOTMAN", "FOOTNOTE", "FORAGER", "FORBID",
+            "FORCED", "FORCES", "FOREARM", "FORECAST", "FOREHEAD", "FOREIGN", "FOREMAN", "FOREMOST", "FORESEE", "FOREST",
+            "FOREVER", "FORGED", "FORGERY", "FORGET", "FORGIVE", "FORMAL", "FORMED", "FORMER", "FORMING", "FORMULA",
+            "FORSAKE", "FORTIFY", "FORTUNE", "FORWARD", "FOSSIL", "FOSTER", "FOUGHT", "FOUNDED", "FOUNDER", "FOUNTAIN",
+            "FOURTH", "FOXHOLE", "FRAGILE", "FRAGMENT", "FRAGRANT", "FRAILTY", "FRAMED", "FRAMER", "FRAMES", "FRANTIC",
+            "FRATERNITY", "FRAUDULENT", "FREAKISH", "FRECKLE", "FREEDOM", "FREEING", "FREELY", "FRENZY", "FREQUENT", "FRESHLY",
+            "FRETFUL", "FRICTION", "FRIENDED", "FRIENDLY", "FRIGATE", "FRIGHT", "FROGGY", "FROLIC", "FRONTED", "FRONTIER",
+            "FROSTED", "FROTHY", "FROWNED", "FRUGAL", "FRUITFUL", "FULFILL", "FUMBLE", "FUNCTION", "FUNDED", "FUNDING",
+            "FUNERAL", "FUNNEL", "FURIOUS", "FURNACE", "FURNISH", "FURROW", "FURTHER", "FUSION", "FUTURE", "GAINFUL",
+            "GAINING", "GALLANT", "GALLERY", "GALLEY", "GALLOP", "GAMBLE", "GAMBLING", "GAMEPLAY", "GANGSTER", "GARDEN",
+            "GARLAND", "GARLIC", "GARMENT", "GARNISH", "GARTER", "GASLIGHT", "GASPED", "GASTRIC", "GATHER", "GAUGED",
+            "GAUGES", "GAUNTLY", "GAVEL", "GAWKING", "GAYEST", "GAZED", "GAZELLE", "GAZES", "GEARED", "GEARING",
+            "GEEKED", "GENDER", "GENEROUS", "GENIAL", "GENIUS", "GENTLE", "GENTLY", "GENUINE", "GEOLOGY", "GEOMETRY",
+            "GERMAN", "GERMINATE", "GETTING", "GHOSTLY", "GIFTED", "GIGGLE", "GILDED", "GINGER", "GIRDLE", "GIRLISH",
+            "GIVING", "GLACIER", "GLADLY", "GLANCED", "GLANCES", "GLARING", "GLASSY", "GLAZED", "GLAZES", "GLEAMING",
+            "GLEANED", "GLIDED", "GLIDER", "GLIDES", "GLIMMER", "GLIMPSE", "GLINTED", "GLISTEN", "GLITTER", "GLOBAL",
+            "GLOBES", "GLOOMY", "GLORIOUS", "GLOSSY", "GLOVED", "GLOWING", "GLUEING", "GLUMMY", "GLUTTED", "GNARLED",
+            "GNASHED", "GNAWED", "GOALIE", "GOALPOST", "GOBLIN", "GODDESS", "GOLDEN", "GOLFING", "GOODBYE", "GOODNESS",
+            "GOODWILL", "GOOFED", "GORGEOUS", "GOSPEL", "GOSSIP", "GOVERN", "GRABBED", "GRACEFUL", "GRACIOUS", "GRADED",
+            "GRADES", "GRADUAL", "GRAFTED", "GRAINED", "GRAMMAR", "GRANDLY", "GRANTED", "GRAPHIC", "GRASPED", "GRASSY",
+            "GRATED", "GRATES", "GRATITUDE", "GRAVEL", "GRAVELY", "GRAVITY", "GRAZED", "GRAZES", "GREASE", "GREASY",
+            "GREATLY", "GREENERY", "GREETED", "GREETING", "GRIEVED", "GRIEVES", "GRIFFIN", "GRILLED", "GRIMLY", "GRIMACE",
+            "GRINDING", "GRIPPED", "GRIPPER", "GRISTLE", "GRITTY", "GROANED", "GROCER", "GROOMED", "GROOVY", "GROSSLY",
+            "GROUNDED", "GROUPED", "GROWING", "GROWLED", "GROWNUP", "GRUBBY", "GRUDGE", "GRUMBLE", "GRUMPY", "GUARANTEE",
+            "GUARDED", "GUARDIAN", "GUESSER", "GUESSING", "GUIDANCE", "GUIDED", "GUIDES", "GUILTY", "GULLIBLE", "GULPED",
+            "GUMMED", "GUNMAN", "GUNNER", "GUNPOWDER", "GURGLED", "GUSHING", "GUSTING", "GUTTED", "HABITAT", "HACKED",
+            "HACKER", "HAGGARD", "HAILSTORM", "HAIRLESS", "HALFED", "HALFWAY", "HALLMARK", "HALLOWED", "HALTED", "HALTING",
+            "HANDED", "HANDLER", "HANDLING", "HANDSOME", "HANGED", "HANGER", "HANGING", "HAPPEN", "HARASS", "HARBOR",
+            "HARDEN", "HARDLY", "HARMFUL", "HARMONY", "HARNESSED", "HARSHLY", "HARVEST", "HASSLE", "HASTILY", "HATCHED",
+            "HATCHET", "HAUNTED", "HAVING", "HAWKISH", "HAZARD", "HAZILY", "HEADACHE", "HEADED", "HEADING", "HEADLAND",
+            "HEADLONG", "HEADSET", "HEALING", "HEALTH", "HEAPED", "HEARING", "HEARSE", "HEARTILY", "HEATING", "HEAVEN",
+            "HEAVILY", "HECTIC", "HEDGED", "HEDGES", "HEEDED", "HEIGHT", "HELICOPTER", "HELLISH", "HELPFUL", "HELPING",
+            "HELPLESS", "HEMPEN", "HERALD", "HERDED", "HERITAGE", "HEROIC", "HESITATE", "HIDDEN", "HIGHER", "HIGHLY",
+            "HIGHWAY", "HIKING", "HINDER", "HINTED", "HIRING", "HISTORIC", "HITCHED", "HOARDED", "HOBBLED", "HOGGED",
+            "HOLDING", "HOLLOW", "HOLOCAUST", "HOMAGE", "HOMELY", "HOMEOWNER", "HOMESICK", "HOMETOWN", "HONEST", "HONEYCOMB",
+            "HONORABLE", "HONORED", "HOODED", "HOOFED", "HOOKED", "HOOPED", "HOOTED", "HOPEFUL", "HOPING", "HORIZON",
+            "HORMONAL", "HORNET", "HORRIBLE", "HORRID", "HORROR", "HORSEMAN", "HOSPICE", "HOSPITAL", "HOSTAGE", "HOSTILE",
+            "HOTBED", "HOURLY", "HOUSES", "HOUSING", "HOVERED", "HUDDLED", "HUFFY", "HUGGED", "HUMANE", "HUMANLY",
+            "HUMBLE", "HUMID", "HUMILIATE", "HUMOROUS", "HUMPED", "HUNCHED", "HUNDRED", "HUNGER", "HUNTED", "HUNTER",
+            "HURLED", "HURRIED", "HURRYING", "HURTFUL", "HUSBAND", "HYBRID", "HYDRATED", "HYGIENE", "HYMNAL", "HYPNOTIC",
+            "ICEBERG", "ICICLE", "IDEALLY", "IDENTIFY", "IDENTITY", "IDIOCY", "IDLEST", "IGNITE", "IGNORED", "ILLNESS",
+            "ILLUSION", "ILLUSTRATE", "IMAGINE", "IMBALANCE", "IMBEDDED", "IMBIBE", "IMBUED", "IMMACULATE", "IMMATERIAL", "IMMEDIATE",
+            "IMMENSE", "IMMERSIVE", "IMMIGRANT", "IMMINENT", "IMMORAL", "IMPACT", "IMPAIRED", "IMPARTIAL", "IMPASSE", "IMPATIENT",
+            "IMPEACH", "IMPEDE", "IMPENDING", "IMPERIAL", "IMPERSONAL", "IMPLANT", "IMPLICIT", "IMPLORE", "IMPLYING", "POLICE",
+            "PONDER", "PONTOON", "POODLE", "POOLED", "POPPED", "POPULAR", "POROUS", "PORTAL", "PORTED", "PORTION",
+            "PORTRAY", "POSING", "POSITION", "POSITIVE", "POSSIBLE", "POSTAL", "POSTED", "POSTER", "POTENT", "POULTRY",
+            "POUNCED", "POUNDER", "POVERTY", "POWDER", "POWERFUL", "PRACTICE", "PRAIRIE", "PRAISED", "PRAISES", "PRANKED",
+            "PRATTLE", "PRAYER", "PREACH", "PRECIOUS", "PRECISE", "PREDICT", "PREFER", "PREGNANT", "PREJUDICE", "PRELUDE",
+            "PREMIER", "PREPARE", "PREPARED", "PRESENCE", "PRESENT", "PRESERVE", "PRESIDE", "PRESSES", "PRESSURE", "PRESTIGE",
+            "PRESUME", "PREVAIL", "PREVENT", "PREVIOUS", "PRICED", "PRICES", "PRICKLE", "PRIMAL", "PRIMARY", "PRIMITIVE",
+            "PRINCE", "PRINTER", "PRISON", "PRIVATE", "PROBABLE", "PROBLEM", "PROCEED", "PROCESS", "PROCLAIM", "PRODUCE",
+            "PRODUCT", "PROFANE", "PROFESS", "PROFILE", "PROFIT", "PROFOUND", "PROGRAM", "PROJECT", "PROLONG", "PROMISE",
+            "PROMOTE", "PROMPT", "PRONOUNCE", "PROPER", "PROPERTY", "PROPHECY", "PROPOSAL", "PROPOSED", "PROSECUTE", "PROSPECT",
+            "PROSPER", "PROTECT", "PROTEST", "PROUDLY", "PROVEN", "PROVIDE", "PROVIDED", "PROVINCE", "PROVOKE", "PROWESS",
+            "PRUDENT", "PRUNED", "PRYING", "PUBLIC", "PUFFED", "PULLED", "PULLEY", "PULLING", "PULPITS", "PULSAR",
+            "PULSED", "PULSES", "PUMPED", "PUNCHED", "PUNCHES", "PUNISH", "PUPPET", "PURCHASE", "PURELY", "PURGED",
+            "PURGES", "PURIFY", "PURPLE", "PURPOSE", "PURSUIT", "PUSHED", "PUSHES", "PUSHOVER", "PUTTING", "PUZZLE",
+            "PYRAMID", "QUADRANT", "QUAIL", "QUAKED", "QUAKES", "QUALIFY", "QUALITY", "QUANTITY", "QUARREL", "QUARTER",
+            "QUARTET", "QUASHED", "QUAVER", "QUEENLY", "QUENCH", "QUERIED", "QUERIES", "QUESTION", "QUICKLY", "QUIETLY",
+            "QUILTED", "QUIRKY", "QUITTED", "QUIVER", "QUOTED", "QUOTES", "RABBIT", "RABIDLY", "RACIAL", "RACING",
+            "RADAR", "RADIANT", "RADIATE", "RADICAL", "RAFFLE", "RAILED", "RAISED", "RAISES", "RAMBLE", "RAMPANT",
+            "RANCHER", "RANDOM", "RANGED", "RANGER", "RANGES", "RANKED", "RANKING", "RANSOM", "RAPIDLY", "RARELY",
+            "RASHLY", "RATHER", "RATING", "RATION", "RATTLED", "RAVAGE", "RAVENOUS", "RAZOR", "REACHED", "REACHES",
+            "REACTED", "READILY", "READING", "REALISM", "REALITY", "REALIZE", "REALLY", "REAPED", "REASON", "REASSURE",
+            "REBATE", "REBEL", "REBOUND", "REBUILD", "REBUKE", "RECALL", "RECEDE", "RECEIPT", "RECEIVE", "RECENT",
+            "RECENTLY", "RECEPTIVE", "RECESS", "RECIPE", "RECITE", "RECKON", "RECLAIM", "RECLINE", "RECOGNIZE", "RECOLLECT",
+            "RECOMMEND", "RECONCILE", "RECORD", "RECOUNT", "RECOVER", "RECRUIT", "RECTIFY", "RECUPERATE", "RECURRED", "RECUSE",
+            "RECYCLE", "REDEEM", "REDUCE", "REDUCED", "REDUCES", "REDUCTION", "REDUNDANT", "REFEREE", "REFERRAL", "REFERRED",
+            "REFINE", "REFLECT", "REFORM", "REFRAIN", "REFRESH", "REFUGE", "REFUND", "REFUSAL", "REFUSED", "REFUSES",
+            "REGALIA", "REGARD", "REGARDED", "REGARDING", "REGARDS", "REGIMEN", "REGION", "REGIONAL", "REGISTER", "REGRET",
+            "REGULAR", "REGULATE", "REHEARSE", "REINFORCE", "REJECT", "REJOICE", "RELAPSE", "RELATE", "RELATED", "RELATION",
+            "RELATIVE", "RELAXED", "RELAXES", "RELAYED", "RELEASE", "RELEVANT", "RELIABLE", "RELIANCE", "RELIEVED", "RELIEVES",
+            "RELIGION", "RELISH", "RELOCATE", "REMAIN", "REMEMBER", "REMIND", "REMINISCE", "REMITTED", "REMNANT", "REMODEL",
+            "REMORSE", "REMOTE", "REMOVED", "REMOVES", "RENDER", "RENEWAL", "RENOUNCED", "RENOVATE", "RENTAL", "REPAID",
+            "REPAIR", "REPEAL", "REPEAT", "REPELLED", "REPLACE", "REPORT", "REPOSE", "REPRESENT", "REPRESS", "REPRIEVE",
+            "REPROACH", "REPRODUCE", "REPROOF", "REPUBLIC", "REQUEST", "REQUIRED", "REQUIRES", "RESEARCH", "RESEMBLE", "RESENT",
+            "RESERVE", "RESIDE", "RESIGNED", "RESIST", "RESOLUTE", "RESOLVE", "RESORT", "RESOURCE", "RESPECT", "RESPOND",
+            "RESPONSE", "RESTED", "RESTFUL", "RESTING", "RESTORE", "RESTRAIN", "RESULT", "RESUME", "RETAIN", "RETAINED",
+            "RETALIATE", "RETARD", "RETICENT", "RETIRED", "RETIREE", "RETIRES", "RETORT", "RETRACT", "RETREAT", "RETRIEVE",
+            "RETURN", "REVEAL", "REVEALED", "REVENGE", "REVENUE", "REVERED", "REVERIE", "REVERSE", "REVIEW", "REVISED",
+            "REVISES", "REVIVAL", "REVIVE", "REVOKED", "REVOLT", "REVOLVE", "REWARD", "RHETORIC", "RHYTHM", "RIBBON",
+            "RICHER", "RIDDLE", "RIDICULE", "RIFLED", "RIFLES", "RIGHTFUL", "RIGIDLY", "RIGOROUS", "RIMMED", "RINGED",
+            "RINGING", "RIOTER", "RIOTING", "RIPEN", "RIPPED", "RIPPLE", "RISING", "RISKED", "RISKY", "RITUAL",
+            "RIVALRY", "RIVERSIDE", "ROAMING", "ROARING", "ROASTED", "ROBBER", "ROBBING", "ROBUST", "ROCKED", "ROCKET",
+            "ROCKING", "RODENT", "RODEO", "ROLLED", "ROLLER", "ROLLING", "ROMANCE", "ROMANTIC", "ROOFTOP", "ROOMMATE",
+            "ROOTED", "ROOTING", "ROSEWOOD", "ROSTER", "ROTARY", "ROTATED", "ROTATES", "ROTTEN", "ROUGHLY", "ROUNDED",
+            "ROUNDING", "ROUTINE", "ROVED", "ROYALTY", "RUBBED", "RUBBER", "RUBBISH", "RUDDER", "RUDELY", "RUFFIAN",
+            "RUGGED", "RUINED", "RULING", "RUMBLE", "RUMOR", "RUMPLE", "RUNDOWN", "RUNNER", "RUNNING", "RURAL",
+            "RUSHED", "RUSHES", "RUSTED", "RUSTIC", "RUSTLE", "SABOTAGE", "SACRED", "SACRIFICE", "SADDLE", "SAFELY",
+            "SAGGED", "SAILOR", "SALARY", "SALESMAN", "SALIVA", "SALLOW", "SALMON", "SALOON", "SALSA", "SALUTE",
+            "SALVAGE", "SAMPLE", "SANCTUARY", "SANDED", "SANDER", "SANDWICH", "SANELY", "SANITARY", "SAPLING", "SARCASM",
+            "SASHED", "SATANIC", "SATCHEL", "SATELLITE", "SATIATE", "SATIRE", "SATISFY", "SATURDAY", "SAUCER", "SAUSAGE",
+            "SAVAGE", "SAVING", "SAVINGS", "SAVORY", "SCALED", "SCALES", "SCALLOP", "SCALPED", "SCAMP", "SCANDAL",
+            "SCANNED", "SCANNER", "SCARCELY", "SCARRED", "SCATTER", "SCENARIO", "SCENERY", "SCENTED", "SCHEDULE", "SCHEME",
+            "SCHOLAR", "SCHOOL", "SCIENCE", "SCISSORS", "SCOFFED", "SCOLDED", "SCOOPED", "SCOOTER", "SCOPED", "SCORES",
+            "SCORING", "SCORNED", "SCOTCH", "SCOUNDREL", "SCOURED", "SCOUTED", "SCOUTING", "SCRAMBLE", "SCRAPED", "SCRAPER",
+            "SCRATCH", "SCREAM", "SCREENS", "SCREWED", "SCRIBBLE", "SCRIPT", "SCROLL", "SCRUBBED", "SCUFFLE", "SCULPTURE",
+            "SEALED", "SEAMLESS", "SEARCHED", "SEARCHES", "SEASON", "SEATED", "SECOND", "SECRET", "SECRETLY", "SECTION",
+            "SECURE", "SECURED", "SECURES", "SECURITY", "SEDATED", "SEDATIVE", "SEDIMENT", "SEDUCED", "SEDUCES", "SEEING",
+            "SEEKER", "SEEMED", "SEEPAGE", "SEGMENT", "SEIZED", "SEIZES", "SELDOM", "SELECT", "SELFISH", "SELLER",
+            "SELLING", "SEMINAR", "SENIOR", "SENSATION", "SENSIBLE", "SENSITIVE", "SENTENCE", "SENTIMENT", "SEPARATE", "SEPTEMBER",
+            "SEQUENCE", "SERENITY", "SERIAL", "SERIES", "SERIOUS", "SERMON", "SERPENT", "SERVED", "SERVER", "SERVICES",
+            "SERVING", "SESSION", "SETBACK", "SETTING", "SETTLE", "SETTLED", "SETTLER", "SEVERAL", "SEVERE", "SEVERED",
+            "SEWAGE", "SEWING", "SHABBY", "SHACKLE", "SHADED", "SHADES", "SHADOW", "SHAFTED", "SHAKEN", "SHAKER",
+            "SHAKES", "SHAKING", "SHALLOW", "SHAMEFUL", "SHAMPOO", "SHANKED", "SHAPED", "SHAPES", "SHARED", "SHARES",
+            "SHARING", "SHARPEN", "SHATTER", "SHAVED", "SHAVES", "SHAWL", "SHEATH", "SHEDDING", "SHEEPISH", "SHEERLY",
+            "SHEETED", "SHELLED", "SHELLFISH", "SHELTER", "SHIELD", "SHIFTED", "SHIFTER", "SHIMMER", "SHINDIG", "SHINED",
+            "SHINES", "SHINGLE", "SHINING", "SHIPMENT", "SHIPPED", "SHIPPER", "SHIPPING", "SHIRKED", "SHIVER", "SHOCKED",
+            "SHOCKING", "SHOOTER", "SHOOTING", "SHOPPED", "SHOPPER", "SHOPPING", "SHORELINE", "SHORTAGE", "SHORTEN", "SHORTLY",
+            "SHOTGUN", "SHOULDER", "SHOUTED", "SHOUTING", "SHOVELED", "SHOWCASE", "SHOWED", "SHOWER", "SHOWING", "SHREDDED",
+            "SHREDDER", "SHRIEK", "SHRIMP", "SHRINK", "SHRUGGED", "SHUFFLE", "SHUTTER", "SICKEN", "SICKLE", "SICKLY",
+            "SIDED", "SIDELONG", "SIDETRACK", "SIEGED", "SIESTA", "SIFTED", "SIGHED", "SIGHTED", "SIGNAGE", "SIGNAL",
+            "SIGNED", "SIGNER", "SIGNIFICANT", "SILENCE", "SILENT", "SILKILY", "SILVER", "SIMILAR", "SIMPLE", "SIMPLY",
+            "SINCERE", "SINFUL", "SINGED", "SINGER", "SINGING", "SINGLE", "SINKING", "SIPHON", "SISTER", "SITTING",
+            "SITUATION", "SIXTEEN", "SIZABLE", "SIZED", "SIZING", "SKELETON", "SKETCH", "SKIING", "SKILLED", "SKIMPED",
+            "SKINNY", "SKIPPED", "SKIPPER", "SKIRMISH", "SKIRTED", "SKULLCAP", "SKYLINE", "SLACKEN", "SLANTED", "SLASHED",
+            "SLASHES", "SLATED", "SLATES", "SLATHER", "SLAUGHTER", "SLAVERY", "SLEEKLY", "SLEEPING", "SLEEPY", "SLEETED",
+            "SLEIGHT", "SLENDER", "SLICED", "SLICES", "SLIDING", "SLIGHT", "SLIMMED", "SLINGSHOT", "SLIPPED", "SLIPPER",
+            "SLITHER", "SLOGGED", "SLOPPY", "SLOTTED", "SLOUCH", "SLOWED", "SLOWER", "SLOWLY", "SLUGGISH", "SLUMBER",
+            "SLUMPED", "SLURRED", "SLUSHY", "SMALLER", "SMARTLY", "SMASHED", "SMASHES", "SMEAR", "SMELL", "SMILED",
+            "SMILES", "SMILING", "SMIRKED", "SMITTEN", "SMOKED", "SMOKER", "SMOKES", "SMOKING", "SMOOTH", "SMOTHER",
+            "SMUDGED", "SMUDGES", "SMUGGLED", "SNAKED", "SNAKES", "SNAPPED", "SNAPPER", "SNAPPY", "SNARED", "SNARES",
+            "SNARLED", "SNATCH", "SNEAKER", "SNEAKING", "SNEERED", "SNEEZE", "SNIFFED", "SNIPER", "SNIPPED", "SNIVEL",
+            "SNOOPED", "SNOOZE", "SNORKEL", "SNOUTED", "SNOWBALL", "SNOWED", "SNOWFALL", "SNOWING", "SNUBBED", "SNUFFED",
+            "SOAKED", "SOAPBOX", "SOARING", "SOBERLY", "SOCIAL", "SOCIETY", "SOCKET", "SOFTEN", "SOFTLY", "SOILED",
+            "SOLACE", "SOLAR", "SOLDERING", "SOLDIER", "SOLELY", "SOLICIT", "SOLIDLY", "SOLUBLE", "SOLVED", "SOLVENT",
+            "SOMBER", "SOMEHOW", "SOMEONE", "SOMETHING", "SOMETIMES", "SOMEWHAT", "SONATA", "SONGSTER", "SONNET", "SOONER",
+            "SOPRANO", "SORCERER", "SORDID", "SORELY", "SORROW", "SORTED", "SOUNDED", "SOUNDLY", "SOURCE", "SOURED",
+            "SOUTHERN", "SOVEREIGN", "SPACED", "SPACES", "SPACIOUS", "SPARKLE", "SPARKLING", "SPARROW", "SPARSE", "SPARSELY",
+            "SPASMS", "SPATTER", "SPAWNED", "SPEAKER", "SPECIAL", "SPECIES", "SPECIFIC", "SPECIMEN", "SPECKLED", "SPECTACLE",
+            "SPECTRUM", "SPECULATE", "SPEECH", "SPEEDILY", "SPEEDING", "SPELLBOUND", "SPENDER", "SPENDING", "SPHERE", "SPICED",
+            "SPICES", "SPIDER", "SPIKED", "SPIKES", "SPILLING", "SPINACH", "SPINDLE", "SPINNER", "SPIRAL", "SPIRITED",
+            "SPIRITS", "SPITTING", "SPLASH", "SPLENDID", "SPLICE", "SPLINTER", "SPOILED", "SPOKEN", "SPONGE", "SPONSOR",
+            "SPOOKY", "SPOONFUL", "SPORTING", "SPOTTED", "SPOTTER", "SPRAWL", "SPRAYED", "SPREAD", "SPRIGGED", "SPRING",
+            "SPRINT", "SPRINKLE", "SPRITE", "SPROUT", "SPRUCE", "SPURIOUS", "SPURNED", "SPURRED", "SQUABBLE", "SQUALID",
+            "SQUALL", "SQUANDER", "SQUARE", "SQUASH", "SQUEAK", "SQUEAL", "SQUEEZE", "SQUELCH", "SQUIDDY", "STABLE",
+            "STACKED", "STADIUM", "STAFFED", "STAGED", "STAGES", "STAGGER", "STAIDLY", "STAINED", "STAIRCASE", "STAKED",
+            "STAKES", "STALEMATE", "STALKING", "STALLED", "STALLION", "STAMPED", "STAMPING", "STANDING", "STANDOFF",
+            "STANDOUT", "STARFISH", "STARGAZE", "STARRED", "STARTING", "STARVED", "STARVES", "STATEHOOD", "STATELY", "STATEMENT",
+            "STATION", "STATUE", "STATUS", "STEADILY", "STEADY", "STEELED", "STEEPLY", "STEERED", "STEERING", "STELLAR",
+            "STEMMED", "STEPPED", "STEPPING", "STERILE", "STERLING", "STERNLY", "STIFLE", "STIGMA", "STILLNESS", "STIMULATE",
+            "STINGING", "STINKING", "STIRRED", "STIRRING", "STITCH", "STOCKING", "STOICALLY", "STOKED", "STOLEN", "STOMACH",
+            "STOMPED", "STONEWALL", "STONING", "STOOPED", "STOPPED", "STOPPING", "STORAGE", "STORED", "STORIES", "STORMED",
+            "STORMY", "STOUTLY", "STOWED", "STRAIGHT", "STRAINED", "STRANGE", "STRANGER", "STRATEGY", "STRAWBERRY", "STRAYED",
+            "STREAKED", "STREAM", "STREET", "STRENGTH", "STRESS", "STRETCH", "STRICT", "STRIFE", "STRIKE", "STRIKING",
+            "STRING", "STRIPED", "STRIPPER", "STROKE", "STROLLER", "STRONG", "STRUCK", "STRUGGLE", "STRUNG", "STUBBORN",
+            "STUBBLE", "STUDDED", "STUDENT", "STUDIED", "STUDIES", "STUDIO", "STUFFED", "STUMBLE", "STUNTED", "STUPID",
+            "STURDY", "STYLED", "STYLES", "SUBDUED", "SUBDUES", "SUBJECT", "SUBMERGE", "SUBMIT", "SUBMITTED", "SUBORDINATE",
+            "SUBSIDE", "SUBSIDY", "SUBSTANCE", "SUBTLE", "SUBTLY", "SUBTRACT", "SUCCEED", "SUCCESS", "SUCCINCT", "SUCKED",
+            "SUDDEN", "SUDDENLY", "SUFFER", "SUFFICE", "SUFFOCATE", "SUGGEST", "SUITABLE", "SUITED", "SULKILY", "SULKING",
+            "SULLEN", "SULPHUR", "SUMMARIZE", "SUMMER", "SUMMIT", "SUMMON", "SUNBATHE", "SUNBURN", "SUNDAE", "SUNKEN",
+            "SUNLIGHT", "SUNNY", "SUNRISE", "SUNSET", "SUPERB", "SUPERIOR", "SUPPLY", "SUPPORT", "SUPPOSE", "SUPREME",
+            "SURFACE", "SURGEON", "SURGERY", "SURMISE", "SURNAME", "SURPASS", "SURPLUS", "SURPRISE", "SURROUND", "SURVEY",
+            "SURVIVAL", "SURVIVE", "SUSPECT", "SUSPEND", "SUSTAIN", "SWALLOW", "SWAMPY", "SWARMED", "SWAYED", "SWEARING",
+            "SWEATER", "SWEEPING", "SWEETLY", "SWELLING", "SWIFTLY", "SWIMMING", "SWINDLE", "SWINGING", "SWIRLED", "SWITCH",
+            "SWOLLEN", "SWORD", "SYLLABLE", "SYMBOL", "SYMMETRY", "SYMPATHY", "SYMPHONY", "SYNDROME", "SYNTAX", "SYSTEM",
+            "TABLES", "TABLET", "TABLOID", "TACIT", "TACTFUL", "TACTICS", "TAGGED", "TAILOR", "TAINTED", "TAKING",
+            "TALENT", "TALKED", "TALKER", "TALKING", "TALLER", "TAMPER", "TANGIBLE", "TANGLED", "TANKER", "TANNED",
+            "TAPERED", "TARGET", "TARIFF", "TARMAC", "TASTED", "TASTES", "TASTING", "TATTOO", "TAUNTED", "TAUTLY",
+            "TAVERN", "TAXATION", "TAXIED", "TEACHER", "TEACHING", "TEACUP", "TEAMED", "TEAMING", "TEARDROP", "TEARFUL",
+            "TEARING", "TEASED", "TEASES", "TECHNIQUE", "TEDIOUS", "TEETER", "TELECAST", "TELEGRAM", "TELEPHONE", "TELESCOPE",
+            "TELLER", "TELLING", "TEMPER", "TEMPEST", "TEMPLE", "TEMPORARY", "TEMPTED", "TEMPTING", "TENANT", "TENDER",
+            "TENNIS", "TENSION", "TENURE", "TERMED", "TERMINAL", "TERRAIN", "TERRIBLE", "TERRIFIC", "TERROR", "TESTED",
+            "TESTING", "TEXTBOOK", "TEXTILE", "TEXTURE", "THANKFUL", "THANKS", "THEATER", "THEMED", "THEMES", "THEORY",
+            "THERMAL", "THICKEN", "THICKLY", "THIEVES", "THINKER", "THINKING", "THINLY", "THIRSTY", "THIRTY", "THISTLE",
+            "THOROUGH", "THOUGHT", "THREAD", "THREAT", "THRILL", "THRIVE", "THROAT", "THRONED", "THRONES", "THROUGH",
+            "THROWER", "THROWING", "THROWOUT", "THRUST", "THUMBED", "THUNDER", "TICKED", "TICKER", "TICKET", "TICKLE",
+            "TIDIED", "TIDIES", "TIDILY", "TIGHTEN", "TIGHTLY", "TILED", "TILING", "TILLED", "TIMBER", "TIMELY",
+            "TIMING", "TINSEL", "TINY", "TIPPED", "TIPPER", "TIPPING", "TIREDLY", "TISSUE", "TITANIC", "TITLED",
+            "TITLES", "TOASTED", "TOASTER", "TODAY", "TOGETHER", "TOILET", "TOKENS", "TOLERATE", "TOMATO", "TOMBSTONE",
+            "TONGUE", "TONIGHT", "TOPPED", "TOPPLE", "TORMENT", "TORPEDO", "TORRENT", "TORTURE", "TOTALLED", "TOTALLY",
+            "TOUCHED", "TOUCHES", "TOUGHEN", "TOUGHLY", "TOURING", "TOWARD", "TOWEL", "TOWERING", "TOWNIE", "TOWNSHIP",
+            "TRACED", "TRACER", "TRACES", "TRACKED", "TRACKER", "TRACKING", "TRACTOR", "TRADED", "TRADER", "TRADES",
+            "TRADITION", "TRAFFIC", "TRAILED", "TRAILER", "TRAINING", "TRAITOR", "TRANQUIL", "TRANSACT", "TRANSFER",
+            "TRANSFORM", "TRANSIT", "TRANSLATE", "TRANSMIT", "TRANSPORT", "TRAPPER", "TRAPPED", "TRAVEL", "TRAVELED", "TRAVELLER", "TREACHEROUS",
+            "TREADED", "TREASURE", "TREATED", "TREATMENT", "TREMENDOUS", "TREMOR", "TRENDY", "TRIBAL", "TRIBUNAL", "TRICKED",
+            "TRICKLE", "TRICKY", "TRIFLE", "TRIGGER", "TRIMMED", "TRIPLED", "TRIPLET", "TRIVIAL", "TRODDEN", "TROUBLE",
+            "TROUBLED", "TROUSER", "TRUANT", "TRUCKER", "TRUCKED", "TRULY", "TRUMPET", "TRUNKED", "TRUSTED", "TRUSTEE",
+            "TRUSTING", "TRUTHFUL", "TRYING", "TUBING", "TUCKED", "TUESDAY", "TUITION", "TUMBLE", "TUMMY", "TUNEUP",
+            "TUNNEL", "TURBAN", "TURBID", "TURKEY", "TURNED", "TURNER", "TURNING", "TURTLE", "TWELVE", "TWENTY",
+            "TWIGGY", "TWILIGHT", "TWINKLE", "TWIRLED", "TWISTED", "TWITTER", "TYCOON", "TYPING", "TYPICAL", "TYPIST",
+            "ULCER", "ULTIMATE", "UMBER", "UNFIT", "UNIFY", "UNION", "UNITE", "UNITY", "UNLIT",
+            "UNTIL", "UPPER", "UPSET", "URBAN", "URGED", "URGES", "USAGE", "USHER", "USUAL", "USURP",
+            "UTTER", "VACAY", "VAGUE", "VALET", "VALID", "VALUE", "VAPID", "VAULT", "VEGAN", "VEINS",
+            "VELLA", "VENOM", "VENUE", "VERGE", "VERSE", "VERVE", "VEXED", "VEXES", "VIBES", "VICEF",
+            "VIDEO", "VIEWS", "VIGOR", "VILLA", "VINES", "VINYL", "VIOLA", "VIRAL", "VIRTU", "VISAS",
+            "VISIT", "VITAL", "VIVID", "VOCAL", "VOGUE", "VOICE", "VOIDF", "VOIDS", "VOLTS", "VOMIT",
+            "VOTED", "VOTER", "VOTES", "VOWEL", "VOWS", "WACKY", "WADED", "WADES", "WAGED", "WAGES",
+            "WAGON", "WAIST", "WAITS", "WAIVE", "WALKS", "WALLS", "WALTZ", "WANTS", "WARMS", "WARNS",
+            "WASTE", "WATCH", "WATER", "WATTS", "WAVED", "WAVES", "WEAKF", "WEAKN", "WEARS", "WEAVE",
+            "WEEDY", "WEEKS", "WEIGH", "WEIRD", "WELCH", "WELLF", "WELLS", "WETLY", "WHALE", "WHARF",
+            "WHEAT", "WHEEL", "WHELP", "WHERE", "WHICH", "WHIFF", "WHILE", "WHITE", "WHOLE", "WHOOP",
+            "WIDER", "WIDOW", "WIDTH", "WIELD", "WIGGL", "WILDY", "WILLS", "WINCE", "WINDS", "WINED",
+            "WINES", "WINGY", "WINGS", "WIPED", "WIPES", "WIRED", "WIRES", "WISHY", "WITCH", "WITHS",
+            "WIVES", "WOOED", "WOODS", "WOOLY", "WORDS", "WORKS", "WORLD", "WORMS", "WORRY", "WORSE",
+            "WORST", "WORTH", "WOULD", "WOUND", "WOVEN", "WRAPS", "WRATH", "WRECK", "WREST", "WRING",
+            "WRITE", "WRONG", "WROTE", "YACHT", "YANKY", "YARDS", "YEARN", "YEARS", "YEAST", "YELLS",
+            "YIELD", "YOUNG", "YOURS", "YOUTH", "ZEBRA", "ZEROS", "ZINGY", "ZONAL"
+        ].filter(word => word.length === 6); 
+
+        const regularWordleWords7 = [
+            "ABANDON", "ABILITY", "ABOLISH", "ABORTED", "ABOUNDS", "ABRASION", "ABSENCE", "ABSOLVE", "ABSORBS", "ABSTAIN",
+            "ABUNDANT", "ACCELERATE", "ACCENTUATE", "ACCOMPLISH", "ACCORDING", "ACCURACY", "ACCURATE", "ACHIEVE", "ACQUIRE", "ACTIVATE",
+            "ADAPTIVE", "ADDITION", "ADEQUATE", "ADJUSTED", "ADMIRABLE", "ADMISSION", "ADOPTED", "ADVANCED", "ADVANTAGE", "ADVENTURE",
+            "ADVERSARY", "ADVISORY", "AFFECTED", "AFFIRMED", "AFFORDABLE", "AFORESAID", "AGAINST", "AGITATED", "AGREEMENT", "AIRCRAFT",
+            "AIRPORT", "ALARMING", "ALCOHOL", "ALGORITHM", "ALIENATE", "ALLEGIANCE", "ALLEGEDLY", "ALLOCATE", "ALLOWING", "ALLUSION",
+            "AMAZINGLY", "AMBASSADOR", "AMBIGUOUS", "AMBITION", "AMENABLE", "ANALYSED", "ANALYST", "ANATOMY", "ANCESTOR", "ANCIENT",
+            "ANECDOTE", "ANNOUNCED", "ANNOYING", "ANOMALOUS", "ANONYMOUS", "ANTENNA", "ANXIETY", "APARTMENT", "APOLOGIZE", "APPARENT",
+            "APPEALING", "APPEARANCE", "APPLIANCE", "APPLICANT", "APPOINTED", "APPRECIATE", "APPROACH", "APPROVAL", "APPROVED", "ARBITRARY",
+            "ARCHITECT", "ARGUMENT", "AROUSING", "ARRANGED", "ARRESTED", "ARRIVAL", "ARTICLES", "ARTISTIC", "ASCENDED", "ASPECTS",
+            "ASPIRING", "ASSEMBLY", "ASSERTION", "ASSESSING", "ASSIGNED", "ASSISTANCE", "ASSISTANT", "ASSOCIATE", "ASSUMING", "ASSURANCE",
+            "ASTONISH", "ATHLETIC", "ATMOSPHERE", "ATTACHED", "ATTEMPTED", "ATTENDANCE", "ATTENTION", "ATTITUDE", "ATTRACTED", "AUDIENCE",
+            "AUTHENTIC", "AUTHORITY", "AUTOMATIC", "AVAILABLE", "AVENUES", "AVERAGE", "AWARENESS", "AWKWARDLY", "BACHELOR", "BACKBONE",
+            "BACKGROUND", "BACKWARD", "BACTERIA", "BALANCED", "BALLOON", "BANDAGES", "BANKRUPT", "BARBARIC", "BARGAINED", "BARRIER",
+            "BASEBALL", "BASEMENT", "BASICALLY", "BASKETBALL", "BATTERED", "BEAUTIFUL", "BEHAVIOR", "BELIEVED", "BELONGED", "BENEATH",
+            "BENEFIT", "BENEVOLENT", "BESIDES", "BETRAYAL", "BETWEEN", "BEWILDER", "BIOGRAPHY", "BIOLOGICAL", "BIRTHDAY", "BITTERLY",
+            "BLACKOUT", "BLANKET", "BLASTING", "BLEEDING", "BLINDING", "BLISSFUL", "BLISTER", "BLOOMING", "BLOSSOM", "BLUNDER",
+            "BOARDING", "BOASTING", "BOMBARD", "BONANZA", "BOOKING", "BOOMING", "BOOSTER", "BORDERED", "BORROWED", "BOTHERED",
+            "BOTTLE", "BOUNDARY", "BOUNTIFUL", "BOUTIQUE", "BRAGGING", "BRAINSTORM", "BRANCHED", "BRANDING", "BREACHED", "BREAKING",
+            "BREASTFED", "BREATHING", "BRILLIANT", "BRINGING", "BRISKLY", "BROADCAST", "BROKENLY", "BROTHERS", "BROWNING", "BRUISING",
+            "BRUTALLY", "BUILDING", "BULLETIN", "BULLYING", "BUMBLING", "BURDENED", "BUREAUCRACY", "BURGEONING", "BURGLARY", "BURNING",
+            "BUSHELS", "BUSINESS", "BUTTERFLY", "CABINET", "CALAMITY", "CALCULATE", "CALENDAR", "CALIBRATE", "CALLING", "CAMPAIGN",
+            "CANADIAN", "CANDIDATE", "CAPACITY", "CAPITAL", "CAPTAIN", "CAPTURED", "CAREFUL", "CAREFULLY", "CARGOES", "CARRIAGE",
+            "CARRIER", "CASUALLY", "CATALOG", "CATASTROPHE", "CATCHING", "CATEGORY", "CATERING", "CAUTIOUS", "CAVALRY", "CELEBRATE",
+            "CELEBRITY", "CELLULAR", "CEMENTED", "CENSORED", "CENTENARY", "CENTRAL", "CEREMONY", "CERTAINLY", "CHALLENGE", "CHAMBER",
+            "CHAMPION", "CHANCELLOR", "CHANGING", "CHANNEL", "CHARACTER", "CHARMING", "CHARTER", "CHASTISE", "CHEAPLY", "CHEATING",
+            "CHECKING", "CHEERFUL", "CHEMICAL", "CHERISHED", "CHICKEN", "CHILDHOOD", "CHILLING", "CHIMNEY", "CHIPPING", "CHRONIC",
+            "CHUCKLING", "CIRCULAR", "CIRCULATE", "CITIZEN", "CIVILIAN", "CLAIMING", "CLARIFIED", "CLARIFY", "CLASSIC", "CLASSIFY",
+            "CLEANING", "CLEARING", "CLIENTS", "CLIMATE", "CLIMBING", "CLINICAL", "CLOSETED", "CLOTHING", "CLUTTER", "COALITION",
+            "COASTAL", "COATING", "COAXING", "COEXIST", "COFFEE", "COHERENT", "COINCIDE", "COLLAPSE", "COLLECTED", "COLLEGE",
+            "COLLISION", "COLONIAL", "COLORFUL", "COMBATANT", "COMBINED", "COMFORT", "COMMANDER", "COMMENCED", "COMMENTED", "COMMERCIAL",
+            "COMMISSION", "COMMITTEE", "COMMODITY", "COMMONWEALTH", "COMMUNICATE", "COMMUNITY", "COMPACTLY", "COMPANION", "COMPARING", "COMPASSION",
+            "COMPELLED", "COMPENSATE", "COMPETENT", "COMPETING", "COMPLETED", "COMPLETELY", "COMPLEXITY", "COMPLIANCE", "COMPLICATE", "COMPOSED",
+            "COMPOUND", "COMPREHEND", "COMPROMISE", "COMPULSORY", "COMPUTER", "CONCEALED", "CONCEDED", "CONCEIVED", "CONCENTRATED", "CONCEPTUAL",
+            "CONCERNED", "CONCERTED", "CONCLUDE", "CONCRETE", "CONDEMNED", "CONDENSED", "CONDITION", "CONDUCTED", "CONFERENCE", "CONFESSED",
+            "CONFIDENCE", "CONFIDENT", "CONFIRMED", "CONFLICTS", "CONFORMING", "CONFRONT", "CONFUSION", "CONGESTED", "CONGRATS", "CONJUNCTION",
+            "CONNECTED", "CONNIVING", "CONQUERED", "CONSCIENCE", "CONSCIOUS", "CONSENSUS", "CONSENTED", "CONSEQUENCE", "CONSERVE", "CONSIDER",
+            "CONSISTED", "CONSOLED", "CONSTANT", "CONSTITUTE", "CONSTRUCT", "CONSULTED", "CONSUMER", "CONSUMING", "CONTACTED", "CONTAINED",
+            "CONTEMPLATE", "CONTENDED", "CONTENTED", "CONTESTED", "CONTEXTUAL", "CONTINUED", "CONTINUING", "CONTRADICT", "CONTRAST", "CONTRIBUTE",
+            "CONTROLLED", "CONVENIENT", "CONVENTION", "CONVERGED", "CONVERSATION", "CONVERTED", "CONVINCED", "COOKING", "COOPERATE", "COORDINATE",
+            "COPYRIGHT", "CORDIALLY", "CORNERED", "CORONARY", "CORPORATE", "CORRECTED", "CORRESPOND", "CORRUPTED", "COSMETIC", "COSTUME",
+            "COTTAGE", "COUNCIL", "COUNSELOR", "COUNTING", "COUNTRY", "COURAGEOUS", "COURTESY", "COVERAGE", "CRACKING", "CRAFTING",
+            "CRASHING", "CREATING", "CREATION", "CREATIVE", "CREDIBLE", "CRITICAL", "CROPPING", "CROSSING", "CRUCIAL", "CRUSHING",
+            "CRYSTAL", "CULTURAL", "CUMULATIVE", "CUNNINGLY", "CURRENCY", "CURRENTLY", "CURTAINS", "CUSTODIAN", "CUSTOMARY", "CUSTOMER",
+            "DAMAGING", "DANGEROUS", "DAZZLING", "DEALING", "DEBATABLE", "DEBATING", "DECADES", "DECEIVED", "DECENTLY", "DECIDING",
+            "DECISION", "DECLINED", "DECORATE", "DECREASE", "DEDICATED", "DEFEATED", "DEFENSIVE", "DEFERRED", "DEFINING", "DEFINITIVE",
+            "DEFLATED", "DEFLECTED", "DEFORMED", "DEGRADED", "DELEGATE", "DELIGHTED", "DELIVERED", "DEMANDING", "DEMOCRACY", "DEMONSTRATE",
+            "DENOMINATOR", "DEPENDENT", "DEPICTED", "DEPLORABLE", "DEPLOYED", "DEPORTED", "DEPOSIT", "DEPRESSED", "DEPRIVING", "DERIVATIVE",
+            "DESCRIBED", "DESERVED", "DESIGNED", "DESIRABLE", "DESPERATE", "DESPISING", "DESTINATION", "DESTROYED", "DETECTIVE", "DETERMINE",
+            "DETESTABLE", "DEVELOPED", "DEVIATED", "DEVISING", "DEVOTION", "DIAGNOSE", "DIFFERENT", "DIFFICULT", "DIGESTION", "DIGNIFIED",
+            "DILIGENT", "DIMINISHED", "DIPLOMACY", "DIRECTLY", "DISASTER", "DISCARDED", "DISCERNING", "DISCIPLINE", "DISCLOSED", "DISCOUNT",
+            "DISCOVER", "DISCREET", "DISCUSSING", "DISEASED", "DISGRACEFUL", "DISGUISED", "DISHONEST", "DISLIKED", "DISMISSED", "DISORDER",
+            "DISPATCHED", "DISPERSED", "DISPLAYED", "DISPLEASED", "DISPOSING", "DISPUTED", "DISRUPTED", "DISSENTED", "DISSOLVED", "DISTANCE",
+            "DISTINCT", "DISTORTED", "DISTRACTED", "DISTRESSED", "DIVERGENT", "DIVIDEND", "DIVIDED", "DIVORCED", "DOCTORAL", "DOCUMENT",
+            "DOMINANT", "DONATING", "DOUBTFUL", "DRAFTING", "DRAGONFLY", "DRAINING", "DRAMATIC", "DREAMING", "DRESSING", "DRIFTING",
+            "DRINKING", "DRIVING", "DROPPING", "DROWNING", "DUPLICATE", "DURABLE", "DUTIFUL", "DYNAMIC", "EAGERNESS", "EARLIEST",
+            "EARNINGS", "EASIEST", "ECONOMIC", "ECSTASY", "EDUCATED", "EFFECTIVE", "EFFICIENT", "ELABORATE", "ELASTIC", "ELECTED",
+            "ELEGANCE", "ELIGIBLE", "ELIMINATE", "ELOQUENT", "EMBARRASS", "EMBEDDED", "EMERGENCY", "EMINENT", "EMOTIONAL", "EMPHASIS",
+            "EMPOWERED", "ENABLING", "ENCOUNTER", "ENCOURAGE", "ENDEAVOR", "ENDLESS", "ENDORSED", "ENDURING", "ENFORCED", "ENGAGED",
+            "ENHANCED", "ENJOYABLE", "ENLIGHTEN", "ENORMOUS", "ENRICHED", "ENROLLED", "ENSURING", "ENTERED", "ENTHUSIASM", "ENTIRELY",
+            "ENTITLED", "ENTRANCE", "ENTRUSTED", "ENVELOPE", "ENVIRONMENT", "EPIDEMIC", "EQUALIZED", "EQUIPPED", "ERADICATE", "ESCALATED",
+            "ESCAPED", "ESSENTIAL", "ESTABLISHED", "ESTIMATED", "ETERNAL", "ETHICAL", "EVALUATE", "EVAPORATE", "EVIDENCE", "EVOLVED",
+            "EXACTING", "EXAGGERATE", "EXAMINED", "EXCELLENT", "EXCEPTIONAL", "EXCHANGE", "EXCITED", "EXCLUDING", "EXCUSABLE", "EXECUTED",
+            "EXHAUSTED", "EXHIBITED", "EXISTENCE", "EXPANDING", "EXPECTED", "EXPENSIVE", "EXPERIENCE", "EXPLAINED", "EXPLODED", "EXPLORING",
+            "EXPOSED", "EXPRESSION", "EXTENDED", "EXTERNAL", "EXTINCTION", "EXTRACTED", "EXTREME", "FABRICATE", "FACILITATE", "FACTORING",
+            "FAITHFUL", "FALLING", "FAMILIAR", "FANTASTIC", "FASCINATE", "FASHIONED", "FASTEST", "FATIGUED", "FAVORITE", "FEASIBLE",
+            "FEATHERED", "FEATURED", "FEDERAL", "FEEDBACK", "FEELING", "FEROCIOUS", "FERTILIZE", "FESTIVAL", "FICTIONAL", "FIELDED",
+            "FIERCELY", "FIFTEEN", "FIGHTING", "FIGURED", "FILAMENT", "FINANCIAL", "FINDING", "FINGERED", "FINISHED", "FIREWORKS",
+            "FIRMAMENT", "FIRSTLY", "FISCAL", "FLAMINGO", "FLASHING", "FLATTERED", "FLAVORFUL", "FLAWLESS", "FLEXIBLE", "FLICKERING",
+            "FLIGHTS", "FLOATING", "FLOODING", "FLOURISH", "FLOWERING", "FOLLOWING", "FOOTBALL", "FORECAST", "FOREIGN", "FOREMOST",
+            "FOREVER", "FORGIVEN", "FORMALIZED", "FORMERLY", "FORTUNATE", "FORWARD", "FOSTERING", "FOUNDATION", "FRAGILE", "FRAGMENT",
+            "FRAGRANT", "FRAMEWORK", "FRANTICALLY", "FREEDOM", "FREEZING", "FREQUENT", "FRICTION", "FRIENDLY", "FRIGHTEN", "FRONTIER",
+            "FRUITFUL", "FULFILLED", "FUNCTION", "FUNDAMENTAL", "FURNISHED", "FURTHER", "FUTURISTIC", "GAINFULLY", "GALLERIES", "GALLOPING",
+            "GAMBLING", "GATHERED", "GENERAL", "GENEROUS", "GENETICS", "GENUINE", "GEOGRAPHY", "GEOMETRY", "GHOSTLY", "GIGGLING",
+            "GLAMOROUS", "GLANCING", "GLIMMERING", "GLISTENING", "GLITTERING", "GLOOMILY", "GLORIOUS", "GOVERNING", "GRACEFUL", "GRADUALLY",
+            "GRAFFITI", "GRANDEST", "GRANULAR", "GRAPEVINE", "GRAPHICS", "GRATEFUL", "GRAVITATE", "GREATLY", "GREETING", "GRIEVOUS",
+            "GRINNING", "GRIPPING", "GRUMBLING", "GUARANTEE", "GUARDING", "GUIDANCE", "GUILTY", "HABITAT", "HANDLING", "HANDSOME",
+            "HAPPENED", "HARASSING", "HARDWARE", "HARMONY", "HARVESTED", "HAUNTING", "HAZARDOUS", "HEADACHE", "HEADLINES", "HEALTHY",
+            "HEARTFELT", "HEAVENLY", "HELPFUL", "HELPLESS", "HERITAGE", "HEROINE", "HESITATE", "HIGHLIGHT", "HIGHWAY", "HISTORIC",
+            "HOMETOWN", "HONORABLE", "HOPEFULLY", "HORIZON", "HORRIBLE", "HOSPITAL", "HOSTILITY", "HOUSEHOLD", "HUMANITY", "HUMILIATE",
+            "HUMOROUS", "HUNDRED", "HURRICANE", "HYPOTHESIS", "ICEBERG", "IDEALISM", "IDENTIFY", "IGNORANCE", "ILLUSION", "ILLUSTRATE",
+            "IMAGINARY", "IMAGINE", "IMMEDIATE", "IMMENSELY", "IMMIGRANT", "IMMINENT", "IMPACTED", "IMPARTIAL", "IMPATIENT", "IMPERIAL",
+            "IMPLICIT", "IMPLORED", "IMPORTANCE", "IMPORTANT", "IMPOSSIBLE", "IMPRESSED", "IMPROVED", "IMPROVING", "INCIDENT", "INCLUDED",
+            "INCLUDING", "INCOME", "INCREASE", "INCREDIBLE", "INCURRED", "INDEPENDENT", "INDICATE", "INDIFFERENT", "INDIVIDUAL", "INDUCING",
+            "INDUSTRIAL", "INFECTED", "INFERIOR", "INFINITE", "INFLUENCE", "INFORMED", "INFRARED", "INGENIOUS", "INHERENT", "INITIAL",
+            "INITIATED", "INJURED", "INNOCENT", "INNOVATE", "INNUMERABLE", "INQUIRED", "INSIGHT", "INSISTED", "INSPECTED", "INSPIRED",
+            "INSTALLED", "INSTANCE", "INSTEAD", "INSTINCT", "INSTITUTE", "INSTRUCT", "INSURANCE", "INTEGRATE", "INTENSITY", "INTENTION",
+            "INTERACT", "INTEREST", "INTERNAL", "INTERPRET", "INTERVAL", "INTIMATE", "INTRIGUE", "INTRODUCE", "INVADED", "INVALID",
+            "INVENTED", "INVESTED", "INVINCIBLE", "INVOLVED", "IRONY", "IRRELEVANT", "ISOLATED", "ISSUES", "ITALIAN", "JACKPOT",
+            "JEALOUS", "JOURNAL", "JOURNEY", "JOYFULLY", "JUDGMENT", "JUDICIAL", "JUMPING", "JUSTICE", "JUSTIFIED", "JUVENILE",
+            "KEENNESS", "KIDNAPPED", "KINDNESS", "KNOWLEDGE", "LABORING", "LAMENTED", "LANDING", "LANGUAGE", "LARGEST", "LASTING",
+            "LAUNCHED", "LAUGHING", "LEADERSHIP", "LEARNING", "LEGACY", "LEGENDARY", "LEGISLATE", "LENGTHY", "LETTING", "LIBERATE",
+            "LIBERTY", "LICENSED", "LIGHTING", "LIKELIHOOD", "LIMITED", "LISTENING", "LITERALLY", "LITERATURE", "LIVELIHOOD", "LIVING",
+            "LOCATION", "LOGICAL", "LONELINESS", "LONGING", "LOOKING", "LOOSENED", "LOYALTY", "LUMINOUS", "LUXURIOUS", "MACHINE",
+            "MAGNIFICENT", "MAINTAIN", "MAJORITY", "MANAGED", "MANAGER", "MANDATORY", "MANIPULATE", "MANUALLY", "MARATHON", "MARGINAL",
+            "MARKETING", "MARRIAGE", "MASSIVE", "MASTERED", "MATERIAL", "MATTERED", "MAXIMUM", "MEANING", "MEASURED", "MECHANICAL",
+            "MEDICINE", "MEDIEVAL", "MELANCHOLY", "MEMORABLE", "MENTALLY", "MERCHANT", "MERCIFUL", "MESSENGER", "METAPHOR", "METHODOLOGY",
+            "MILITARY", "MINIMUM", "MINISTER", "MIRACULOUS", "MISERABLE", "MISFORTUNE", "MISSION", "MISTAKEN", "MITIGATE", "MODERATE",
+            "MODERNIZED", "MODIFIED", "MOMENTUM", "MONARCHY", "MONEYBAG", "MONITOR", "MONUMENT", "MORALITY", "MORTALITY", "MOTIVATED",
+            "MOUNTAIN", "MOVEMENT", "MULTIPLE", "MURMURED", "MUSICAL", "MYSTERIOUS", "NARRATIVE", "NATIONAL", "NATURALLY", "NAUTICAL",
+            "NECESSARY", "NEGATIVE", "NEGLECTED", "NEGOTIATE", "NEIGHBOR", "NERVOUSLY", "NETWORK", "NEUTRAL", "NEWCOMER", "NIGHTMARE",
+            "NOBILITY", "NOMINATE", "NONPROFIT", "NORMALIZED", "NOTHING", "NOTICEABLE", "NOVELIST", "NUMEROUS", "NURTURING", "OBEDIENCE",
+            "OBJECTIVE", "OBLIGATED", "OBSCURE", "OBSERVED", "OBSESSION", "OBSTACLE", "OBTAINED", "OBVIOUSLY", "OCCASION", "OCCURRED",
+            "OFFENDER", "OFFENSIVE", "OFFICIAL", "OPENING", "OPERATED", "OPINION", "OPPONENT", "OPPORTUNITY", "OPPOSITE", "OPPRESSED",
+            "OPTIMISTIC", "OPTIONAL", "ORCHESTRA", "ORDINARY", "ORGANIZED", "ORIENTAL", "ORIGINAL", "OUTCOME", "OUTDOOR", "OUTLOOK",
+            "OUTRAGE", "OVERCOME", "OVERHEAD", "OVERLOOKED", "OVERNIGHT", "OVERTAKE", "OVERWHELM", "PACKAGING", "PAINTING", "PALACE",
+            "PARADISE", "PARALLEL", "PARAMETER", "PARENTAL", "PARLIAMENT", "PARTICULAR", "PARTNER", "PASSENGER", "PASSIONATE", "PASTIME",
+            "PATIENCE", "PATIENTLY", "PATRIOT", "PATROLLING", "PAYMENT", "PEACEFUL", "PEDESTRIAN", "PENALTY", "PENDING", "PENSION",
+            "PERCEIVED", "PERCENTAGE", "PERFORMED", "PERFORMER", "PERILOUS", "PERIODIC", "PERMANENT", "PERMITTED", "PERSISTENT", "PERSONAL",
+            "PERSUADE", "PETITION", "PHANTOM", "PHENOMENON", "PHILOSOPHY", "PHOENIX", "PHYSICAL", "PICKING", "PICTURE", "PILGRIM",
+            "PIONEER", "PIRATES", "PLANNING", "PLANTING", "PLAYGROUND", "PLAYING", "PLEASANT", "PLEASURE", "PLENTIFUL", "POETRY",
+            "POIGNANT", "POLITICAL", "POLLUTION", "POPULAR", "PORTABLE", "PORTRAIT", "POSITION", "POSITIVE", "POSSIBLE", "POSTPONE",
+            "POTENTIAL", "POVERTY", "PRACTICAL", "PRACTICE", "PRAIRIE", "PRECIOUS", "PREDICTED", "PREFERENCE", "PREGNANT", "PREJUDICE",
+            "PRELIMINARY", "PREPARED", "PRESENCE", "PRESENTED", "PRESERVED", "PRESIDENT", "PRESSING", "PRESTIGE", "PRESUMABLY", "PREVAILING",
+            "PREVENTED", "PREVIOUS", "PRIMITIVE", "PRINCIPAL", "PRINTING", "PRIORITY", "PRIVATE", "PRIVILEGE", "PROBABLE", "PROBLEM",
+            "PROCEDURE", "PROCEEDING", "PROCESSED", "PRODUCER", "PRODUCTIVE", "PROFESSION", "PROFITABLE", "PROFOUND", "PROGRAM", "PROGRESS",
+            "PROJECTED", "PROMINENT", "PROMISED", "PROMOTED", "PROMPTLY", "PRONOUNCED", "PROPAGANDA", "PROPERLY", "PROPERTY", "PROPOSAL",
+            "PROPOSED", "PROSPECTIVE", "PROTECTED", "PROTESTED", "PROVIDED", "PROVINCIAL", "PROVOKING", "PRUDENTLY", "PSYCHOLOGY", "PUBLICLY",
+            "PUBLISHED", "PUNISHED", "PURCHASED", "PURPOSELY", "PURSUING", "QUALIFIED", "QUALITY", "QUANTITY", "QUARRELED", "QUARTER",
+            "QUESTION", "QUIETLY", "RADIANT", "RADIATING", "RADICAL", "RAILROAD", "RAISING", "RAMBLING", "RANDOMLY", "RANGING",
+            "RAPIDLY", "RATIONAL", "REACHING", "READABLE", "READINESS", "READING", "REALISTIC", "REALIZED", "REASONABLE", "REASSURE",
+            "REBELLION", "RECALLING", "RECEIVING", "RECENTLY", "RECEPTION", "RECIPROCAL", "RECKLESS", "RECOGNIZED", "RECOLLECT", "RECOMMEND",
+            "RECONCILE", "RECORDED", "RECOVERED", "RECREATION", "RECRUITED", "RECTIFIED", "RECURRING", "REDUCED", "REFINING", "REFLECTED",
+            "REFORMED", "REFRESHING", "REFUGEE", "REFUNDED", "REFUSAL", "REGARDING", "REGISTERED", "REGRETTED", "REGULARLY", "REGULATE",
+            "REHEARSED", "REINFORCE", "REJECTED", "REJOICING", "RELATING", "RELATION", "RELATIVE", "RELAXING", "RELEASED", "RELEVANT",
+            "RELIABLE", "RELIEVED", "RELIGIOUS", "RELUCTANT", "REMAINING", "REMEMBER", "REMINDED", "REMOVED", "RENDERING", "RENEWED",
+            "RENOVATED", "REPEATED", "REPELLING", "REPLACED", "REPORTED", "REPRESENT", "REPRESSED", "REPROACHED", "REPUBLIC", "REQUESTED",
+            "REQUIRED", "RESEARCH", "RESEMBLE", "RESENTED", "RESERVED", "RESIDING", "RESIGNED", "RESISTANT", "RESOLVED", "RESOURCE",
+            "RESPECTED", "RESPONDED", "RESPONSE", "RESTLESS", "RESTORED", "RESTRAINED", "RESULTING", "RETAINED", "RETIRED", "RETREAT",
+            "RETRIEVED", "RETURNED", "REVEALED", "REVENGE", "REVENUE", "REVERSED", "REVIEWED", "REVISED", "REVIVING", "REVOLTED",
+            "REWARDED", "RHYTHMIC", "RIDICULOUS", "RIGHTEOUS", "RIGOROUS", "RISING", "RITUALISTIC", "RIVALRY", "ROAMING", "ROARING",
+            "ROASTING", "ROBUSTLY", "ROCKETING", "ROMANTIC", "ROTATING", "ROTTENLY", "ROUGHLY", "ROUNDING", "ROUTINE", "ROYALTY",
+            "RUGGEDLY", "RUMBLING", "RUSHING", "SACREDLY", "SACRIFICE", "SADDENED", "SAFELY", "SAILING", "SALVAGED", "SANCTUARY",
+            "SANDWICH", "SATISFIED", "SAVING", "SCANDALOUS", "SCANNED", "SCARCELY", "SCATTERED", "SCENARIO", "SCHEDULED", "SCHOLARLY",
+            "SCIENCE", "SCREAMING", "SCREENING", "SCRIPTED", "SCROLLING", "SCRUTINY", "SEALED", "SEARCHING", "SEASONAL", "SECONDARY",
+            "SECRETLY", "SECTIONED", "SECURELY", "SEDATIVE", "SEEKING", "SEGMENTED", "SEIZING", "SELECTED", "SELFISH", "SELLING",
+            "SEMINAR", "SENIOR", "SENSITIVE", "SENTENCE", "SEPARATE", "SEQUENCE", "SERENELY", "SERIOUSLY", "SERVING", "SETTLED",
+            "SEVERELY", "SHADOWED", "SHAKING", "SHALLOW", "SHAMEFUL", "SHAMPOO", "SHAPELESS", "SHARING", "SHARPENED", "SHATTERED",
+            "SHEARING", "SHEETROCK", "SHELTERED", "SHIELDED", "SHIFTING", "SHIMMERING", "SHINING", "SHIPMENT", "SHIPPING", "SHIVERING",
+            "SHOCKING", "SHOOTING", "SHOPPING", "SHORTAGE", "SHORTENED", "SHORTLY", "SHOULDER", "SHOUTING", "SHOWERING", "SHOWING",
+            "SHREDDED", "SHRIEKING", "SHRINKING", "SHRUGGED", "SHUTDOWN", "SICKNESS", "SIGNATURE", "SILENCE", "SILENCING", "SIMILAR",
+            "SIMPLEST", "SIMPLIFIED", "SIMPLY", "SINCERELY", "SINGING", "SINKING", "SISTERLY", "SITUATION", "SKETCHED", "SKILLFUL",
+            "SKINNY", "SKIPPING", "SKIRMISH", "SLACKING", "SLANTED", "SLASHING", "SLAUGHTER", "SLEEPING", "SLENDER", "SLIDING",
+            "SLIGHTLY", "SLIPPING", "SLOGGING", "SLOWDOWN", "SLOWING", "SLUMBER", "SMASHED", "SMELLING", "SMILING", "SMOKING",
+            "SMOOTHLY", "SMOTHERED", "SNAPPING", "SNEAKING", "SNIFFING", "SNOWBALL", "SNOWING", "SOARING", "SOBERING", "SOCIAL",
+            "SOCIETY", "SOFTENED", "SOLDIER", "SOLICITED", "SOLUTION", "SOMETHING", "SOMETIMES", "SOUNDING", "SOUTHERN", "SOVEREIGN",
+            "SPACIOUS", "SPARKLED", "SPARKLING", "SPARROW", "SPEAKING", "SPECIAL", "SPECIFIC", "SPECTACLE", "SPECTRUM", "SPECULATE",
+            "SPEECHLESS", "SPEEDING", "SPELLBIND", "SPENDING", "SPHERE", "SPICING", "SPINNING", "SPIRITED", "SPLASHING", "SPLENDID",
+            "SPLINTER", "SPOILED", "SPONSOR", "SPONTANEOUS", "SPORTING", "SPOTTED", "SPREADING", "SPRINGING", "SPRINKLED", "SPROUTING",
+            "STABILITY", "STABILIZE", "STACKED", "STAGGERED", "STAINED", "STAIRWAY", "STALWART", "STAMMERED", "STAMPING", "STANDARD",
+            "STANDING", "STARLIGHT", "STARTING", "STARVING", "STATEMENT", "STATION", "STATISTIC", "STEADILY", "STEALING", "STEAMING",
+            "STEERING", "STELLAR", "STEMMING", "STEPPING", "STERLING", "STIMULATE", "STINGING", "STINKING", "STIRRING", "STOCKING",
+            "STOICISM", "STOMACH", "STOPPING", "STORAGE", "STORIES", "STORMY", "STRAIGHT", "STRAINED", "STRANGE", "STRATEGIC",
+            "STRENGTH", "STRESSFUL", "STRETCHED", "STRICTLY", "STRIKING", "STRONGLY", "STRUGGLE", "STUDENT", "STUDIOUS", "STUFFED",
+            "STUMBLING", "STUNNING", "STUPIDLY", "STURDILY", "STYLIST", "SUBMITTED", "SUBSTANCE", "SUBTLETY", "SUCCESS", "SUGGESTED",
+            "SUITABLE", "SUMMARIZE", "SUMMER", "SUMMONED", "SUNLIGHT", "SUNSHINE", "SUPERIOR", "SUPPLYING", "SUPPORTED", "SUPPOSED",
+            "SUPREMACY", "SURFACE", "SURGEON", "SURGERY", "SURPRISE", "SURROUND", "SURVIVAL", "SUSPECTED", "SUSPENDED", "SUSTAINED",
+            "SWALLOWED", "SWAMPING", "SWARMING", "SWEARING", "SWEATING", "SWEEPING", "SWEETEST", "SWELLING", "SWIFTLY", "SWIMMING",
+            "SWINDLED", "SWINGING", "SWITCHED", "SYMPATHY", "SYMPHONY", "SYNCHRONIZE", "SYSTEMATIC", "TABLETS", "TACTICAL", "TAILORED",
+            "TALKING", "TANGIBLE", "TARGETED", "TASTING", "TEACHING", "TEARDROP", "TECHNICAL", "TECHNOLOGY", "TEDIOUSLY", "TELEPHONE",
+            "TELLING", "TEMPERATE", "TEMPEST", "TEMPORARY", "TEMPTING", "TENDENCY", "TENDERLY", "TENSION", "TERMINAL", "TERRIBLE",
+            "TERRIFIC", "TERRITORY", "TESTAMENT", "TESTING", "THANKFUL", "THEATRE", "THEMATIC", "THEORETICAL", "THERAPIST", "THICKNESS",
+            "THINKING", "THIRSTY", "THOROUGH", "THOUGHTFUL", "THREATEN", "THRILLING", "THROUGHOUT", "THROWING", "THUNDER", "TICKETING",
+            "TIGHTENED", "TIGHTLY", "TIMBERED", "TIMEFRAME", "TIMELINESS", "TINY", "TIREDNESS", "TISSUE", "TITANIC", "TOBACCO",
+            "TOGETHER", "TOLERANCE", "TOMORROW", "TONIGHT", "TOPICAL", "TORMENTED", "TORPEDO", "TORRENT", "TORTURED", "TOTALLED",
+            "TOUCHING", "TOUGHNESS", "TOURIST", "TOWARDS", "TRACING", "TRACKING", "TRACTOR", "TRADING", "TRADITION", "TRAFFIC",
+            "TRAINING", "TRAITOR", "TRANQUIL", "TRANSACT", "TRANSFER", "TRANSFORM", "TRANSIT", "TRANSLATE", "TRANSMIT", "TRANSPORT",
+            "TRAPPING", "TRAVELER", "TREASURE", "TREATING", "TREMENDOUS", "TRENDING", "TRIAL", "TRIANGLE", "TRIBAL", "TRICKERY",
+            "TRICKLING", "TRIUMPH", "TROUBLED", "TROUBLING", "TRUCKING", "TRUSTING", "TRUTHFUL", "TRYING", "TUESDAY", "TUITION",
+            "TUMBLING", "TUNNELING", "TURNING", "TWINKLING", "TWISTING", "TYPICAL", "ULTIMATE", "UNABLE", "UNANIMOUS", "UNAVOIDABLE",
+            "UNCERTAIN", "UNCHANGED", "UNCLEAN", "UNCOMFORTABLE", "UNCOMMON", "UNCONSCIOUS", "UNDERGO", "UNDERSTAND", "UNDERTAKE", "UNDOUBTEDLY",
+            "UNDUE", "UNEXPECTED", "UNFAIRLY", "UNFAVORABLE", "UNFOLDING", "UNFORTUNATE", "UNIFIED", "UNIFORM", "UNIMAGINABLE", "UNIMPORTANT",
+            "UNINTENDED", "UNIONIZED", "UNIQUE", "UNITED", "UNIVERSAL", "UNKNOWN", "UNLIKELY", "UNLIMITED", "UNNECESSARY", "UNPLEASANT",
+            "UNREALISTIC", "UNREASONABLE", "UNRELIABLE", "UNRESOLVED", "UNRESPONSIVE", "UNRESTRICTED", "UNSATISFACTORY", "UNSTABLE", "UNSUCCESSFUL", "UNUSUAL",
+            "UNWILLING", "UPCOMING", "UPGRADED", "UPHOLDING", "UPON", "UPSETTING", "URGENTLY", "USEFUL", "USUAL", "UTILITY",
+            "UTILIZE", "VACATION", "VAGUELY", "VALIDATE", "VALUABLE", "VANISHED", "VARIATION", "VARIOUS", "VARYING", "VEGETABLE",
+            "VEHICLE", "VELOCITY", "VENERABLE", "VENTURE", "VERBAL", "VERIFIED", "VERSATILE", "VERSION", "VERTICAL", "VETERAN",
+            "VIBRANT", "VICTORIOUS", "VIEWING", "VILLAGE", "VIOLATED", "VIOLENCE", "VIRTUALLY", "VISIBLE", "VISIONARY", "VISITING",
+            "VISUALIZE", "VITALITY", "VOCATIONAL", "VOLATILE", "VOLUNTARY", "VOWING", "VULNERABLE", "WAITING", "WANDERING", "WANTED",
+            "WARFARE", "WARNING", "WARRANTY", "WASHING", "WASTING", "WATCHING", "WATERFALL", "WEAKNESS", "WEALTHY", "WEARING",
+            "WEATHER", "WEAVING", "WEDNESDAY", "WEEKEND", "WEIGHING", "WELCOME", "WELFARE", "WHATEVER", "WHEREAS", "WHENEVER",
+            "WHETHER", "WHISPERED", "WHOLEHEARTED", "WIDENING", "WILDERNESS", "WILLINGLY", "WINNING", "WINTER", "WISHFUL", "WITHDRAW",
+            "WITNESS", "WONDERFUL", "WOODLAND", "WORKING", "WORLDWIDE", "WORRIED", "WORRYING", "WORTHWHILE", "WRAPPING", "WRISTBAND",
+            "WRITING", "WRONGFULLY", "YELLING", "YESTERDAY", "YOUNGEST", "YOURSELF", "YOUTHFUL", "ZEALOUS"
+        ].filter(word => word.length === 7); 
+
+
+        
+        let currentWordList = regularWordleWords5; 
+        let secretWord = '';
+        let currentGuess = '';
+        let currentRow = 0;
+        let maxGuesses = 6;
+        let wordLength = 5;
+        let gameActive = false;
+        let keyboardState = {}; 
+
+        
+        let reverseSecretWord = '';
+        let reverseCurrentGuess = '';
+        let reverseWordLength = 5;
+        let reverseClues = [];
+        let reverseGameActive = false;
+        let reverseKeyboardState = {};
+        let reverseHintsRemaining = 2; 
+
+        
+        const regularWordleGame = document.getElementById('regularWordleGame');
+        const reverseWordleGame = document.getElementById('reverseWordleGame');
+        const navRegularWordleBtn = document.getElementById('navRegularWordle');
+        const navReverseWordleBtn = document.getElementById('navReverseWordle');
+
+        const regularWordleGrid = document.getElementById('regular-wordle-grid');
+        const regularWordleMessageArea = document.getElementById('regular-wordle-message-area');
+        const regularWordleGuessInput = document.getElementById('regular-wordle-guess-input');
+        const regularWordleSubmitBtn = document.getElementById('regular-wordle-submit-guess');
+        const regularWordleRestartBtn = document.getElementById('regular-wordle-restart-game');
+        const regularWordleHintBtn = document.getElementById('regular-wordle-hint-btn');
+        const hintStreakCountSpan = document.getElementById('hintStreakCount');
+        const regularWordleKeyboardDiv = document.getElementById('regular-wordle-keyboard');
+
+        const reverseWordleCluesDisplay = document.getElementById('reverse-wordle-clues-display');
+        const reverseWordleMessageArea = document.getElementById('reverse-wordle-message-area');
+        const reverseWordleGuessInput = document.getElementById('reverse-wordle-guess-input');
+        const reverseWordleSubmitBtn = document.getElementById('reverse-wordle-submit-guess');
+        const reverseWordleRestartBtn = document.getElementById('reverse-wordle-restart-game');
+        const reverseWordleHintBtn = document.getElementById('reverse-wordle-hint-btn'); 
+        const reverseHintCountSpan = document.getElementById('reverseHintCount'); 
+        const reverseWordleKeyboardDiv = document.getElementById('reverse-wordle-keyboard');
+
+        const regularWordleEasyBtn = document.getElementById('regularWordleEasyBtn');
+        const regularWordleHardBtn = document.getElementById('regularWordleHardBtn');
+        const regularWordleExpertBtn = document.getElementById('regularWordleExpertBtn');
+
+        const reverseWordleEasyBtn = document.getElementById('reverseWordleEasyBtn');
+        const reverseWordleHardBtn = document.getElementById('reverseWordleHardBtn');
+        const reverseWordleExpertBtn = document.getElementById('reverseWordleExpertBtn');
+
+        const themeDefaultBtn = document.getElementById('themeDefaultBtn');
+        const themeNeonBtn = document.getElementById('themeNeonBtn');
+        const body = document.body;
+
+        
+        function switchTheme(theme) {
+            body.classList.remove('theme-default', 'theme-neon');
+            body.classList.add(`theme-${theme}`);
+
+            
+            themeDefaultBtn.classList.remove('active');
+            themeNeonBtn.classList.remove('active');
+            if (theme === 'default') {
+                themeDefaultBtn.classList.add('active');
+            } else if (theme === 'neon') {
+                themeNeonBtn.classList.add('active');
+            }
+        }
+
+        
+        function displayMessage(message, isError = false, gameMode = 'regular') {
+            const messageArea = gameMode === 'regular' ? regularWordleMessageArea : reverseWordleMessageArea;
+            messageArea.textContent = message;
+            messageArea.style.color = isError ? '#ff4d4d' : '#00ffff'; 
+            if (gameMode === 'reverse') {
+                messageArea.style.color = isError ? '#ff4d4d' : '#00ff00'; 
+            }
+        }
+
+        
+        const keyboardLayout = [
+            ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+            ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+            ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'BACKSPACE']
+        ];
+
+        function createVirtualKeyboard(keyboardContainer, gameMode) {
+            keyboardContainer.innerHTML = ''; 
+            
+            if (gameMode === 'regular') {
+                keyboardState = {};
+            } else {
+                reverseKeyboardState = {};
+            }
+
+            keyboardLayout.forEach(row => {
+                const keyboardRowDiv = document.createElement('div');
+                keyboardRowDiv.classList.add('keyboard-row');
+                row.forEach(key => {
+                    const button = document.createElement('button');
+                    button.classList.add('keyboard-button', 'rounded-lg');
+                    button.textContent = key;
+                    button.dataset.key = key; 
+                    if (key === 'ENTER' || key === 'BACKSPACE') {
+                        button.classList.add('large');
+                    }
+                    button.addEventListener('click', () => handleVirtualKeyPress(key, gameMode));
+                    keyboardRowDiv.appendChild(button); 
+                });
+                keyboardContainer.appendChild(keyboardRowDiv); 
+            });
+        }
+
+        function updateVirtualKeyboard(letter, status, gameMode) {
+            const currentKeyboardState = gameMode === 'regular' ? keyboardState : reverseKeyboardState;
+            const keyboardDiv = gameMode === 'regular' ? regularWordleKeyboardDiv : reverseWordleKeyboardDiv;
+
+           
+            const currentStatus = currentKeyboardState[letter];
+            let newStatus = currentStatus;
+
+            if (!currentStatus || (status === 'correct' && currentStatus !== 'correct') || (status === 'present' && currentStatus === 'absent')) {
+                newStatus = status;
+            } else if (status === 'absent' && !currentStatus) {
+                newStatus = status;
+            }
+
+            if (newStatus !== currentStatus) {
+                currentKeyboardState[letter] = newStatus;
+                const keyButton = keyboardDiv.querySelector(`button[data-key="${letter}"]`);
+                if (keyButton) {
+                    keyButton.classList.remove('correct', 'present', 'absent');
+                    keyButton.classList.add(newStatus);
+                }
+            }
+        }
+
+        function resetVirtualKeyboard(gameMode) {
+            const keyboardDiv = gameMode === 'regular' ? regularWordleKeyboardDiv : reverseWordleKeyboardDiv;
+            const buttons = keyboardDiv.querySelectorAll('.keyboard-button');
+            buttons.forEach(button => {
+                button.classList.remove('correct', 'present', 'absent');
+                button.style.border = ''; 
+            });
+            if (gameMode === 'regular') {
+                keyboardState = {};
+            } else {
+                reverseKeyboardState = {};
+            }
+        }
+
+        function handleVirtualKeyPress(key, gameMode) {
+            if (gameMode === 'regular') {
+                if (!gameActive) return;
+
+                if (key === 'ENTER') {
+                    handleRegularWordleGuess();
+                } else if (key === 'BACKSPACE') {
+                    currentGuess = currentGuess.slice(0, -1);
+                    updateRegularWordleGrid();
+                } else if (key.length === 1 && currentGuess.length < wordLength) {
+                    currentGuess += key;
+                    updateRegularWordleGrid();
+                }
+            } else if (gameMode === 'reverse') {
+                if (!reverseGameActive) return;
+
+                if (key === 'ENTER') {
+                    handleReverseWordleGuess();
+                } else if (key === 'BACKSPACE') {
+                    reverseCurrentGuess = reverseCurrentGuess.slice(0, -1);
+                    updateReverseWordleInput();
+                } else if (key.length === 1 && reverseCurrentGuess.length < reverseWordLength) {
+                    reverseCurrentGuess += key;
+                    updateReverseWordleInput();
+                }
+            }
+        }
+
+        
+
+        function initRegularWordle() {
+            
+            secretWord = currentWordList[randomInt(0, currentWordList.length - 1)].toUpperCase();
+            currentGuess = '';
+            currentRow = 0;
+            gameActive = true;
+            hintStreak = 0;
+            hintStreakCountSpan.textContent = hintStreak;
+            displayMessage('', false, 'regular'); 
+
+            
+            regularWordleGrid.innerHTML = '';
+            regularWordleGrid.style.gridTemplateColumns = `repeat(${wordLength}, 1fr)`;
+            for (let i = 0; i < maxGuesses; i++) {
+                for (let j = 0; j < wordLength; j++) {
+                    const tile = document.createElement('div');
+                    tile.classList.add('tile', 'empty');
+                    tile.dataset.row = i;
+                    tile.dataset.col = j;
+                    regularWordleGrid.appendChild(tile);
+                }
+            }
+
+            
+            regularWordleGuessInput.value = '';
+            
+            regularWordleGuessInput.disabled = true; 
+            regularWordleSubmitBtn.disabled = false;
+            regularWordleHintBtn.disabled = false;
+
+           
+            resetVirtualKeyboard('regular');
+            createVirtualKeyboard(regularWordleKeyboardDiv, 'regular');
+
+            console.log("Regular Wordle Secret Word:", secretWord); 
+        }
+
+        function updateRegularWordleGrid() {
+            const tiles = regularWordleGrid.querySelectorAll(`.tile[data-row="${currentRow}"]`);
+            for (let i = 0; i < wordLength; i++) {
+                const tile = tiles[i];
+                tile.textContent = currentGuess[i] || '';
+                if (currentGuess[i]) {
+                    tile.classList.add('filled');
+                } else {
+                    tile.classList.remove('filled');
+                }
+            }
+            
+        }
+
+        async function handleRegularWordleGuess() {
+            if (!gameActive) return;
+
+            const guess = currentGuess.toUpperCase(); 
+
+            if (guess.length !== wordLength) {
+                displayMessage(`Guess must be ${wordLength} letters long!`, true, 'regular');
+                shakeCurrentRow();
+                return;
+            }
+
+            
+            const allWords = [...regularWordleWords5, ...regularWordleWords6, ...regularWordleWords7];
+            if (!allWords.includes(guess)) {
+                displayMessage('Not a valid word!', true, 'regular');
+                shakeCurrentRow();
+                return;
+            }
+
+            displayMessage('', false, 'regular'); 
+
+            const tiles = regularWordleGrid.querySelectorAll(`.tile[data-row="${currentRow}"]`);
+            const secretWordArray = secretWord.split('');
+            const guessArray = guess.split('');
+            const letterCounts = {}; 
+
+            
+            secretWordArray.forEach(char => {
+                letterCounts[char] = (letterCounts[char] || 0) + 1;
+            });
+
+            
+            for (let i = 0; i < wordLength; i++) {
+                const tile = tiles[i];
+                if (guessArray[i] === secretWordArray[i]) {
+                    tile.classList.add('correct');
+                    updateVirtualKeyboard(guessArray[i], 'correct', 'regular');
+                    letterCounts[guessArray[i]]--; 
+                    guessArray[i] = null; 
+                    secretWordArray[i] = null; 
+                }
+            }
+
+            
+            for (let i = 0; i < wordLength; i++) {
+                const tile = tiles[i];
+                if (tile.classList.contains('correct')) continue; 
+
+                if (secretWordArray.includes(guessArray[i]) && letterCounts[guessArray[i]] > 0) {
+                    tile.classList.add('present');
+                    updateVirtualKeyboard(guessArray[i], 'present', 'regular');
+                    letterCounts[guessArray[i]]--;
+                } else {
+                    tile.classList.add('absent');
+                    updateVirtualKeyboard(guessArray[i], 'absent', 'regular');
+                }
+            }
+
+            
+            tiles.forEach((tile, index) => {
+                setTimeout(() => {
+                    tile.classList.add('flip');
+                    tile.addEventListener('transitionend', () => {
+                        tile.classList.remove('flip');
+                        tile.classList.add('flipped');
+                    }, { once: true });
+                }, index * 100); 
+            });
+
+
+            if (guess === secretWord) {
+                displayMessage('You guessed it! Amazing!', false, 'regular');
+                gameActive = false;
+                hintStreak++; 
+                hintStreakCountSpan.textContent = hintStreak;
+                regularWordleGuessInput.disabled = true;
+                regularWordleSubmitBtn.disabled = true;
+                regularWordleHintBtn.disabled = true;
+            } else if (currentRow === maxGuesses - 1) {
+                displayMessage(`Game Over! The word was ${secretWord}.`, true, 'regular');
+                gameActive = false;
+                hintStreak = 0; 
+                hintStreakCountSpan.textContent = hintStreak;
+                regularWordleGuessInput.disabled = true;
+                regularWordleSubmitBtn.disabled = true;
+                regularWordleHintBtn.disabled = true;
+            } else {
+                currentRow++;
+                currentGuess = '';
+               
+            }
+        }
+
+        function shakeCurrentRow() {
+            const currentRowTiles = regularWordleGrid.querySelectorAll(`.tile[data-row="${currentRow}"]`);
+            currentRowTiles.forEach(tile => {
+                tile.classList.add('shake');
+                tile.addEventListener('animationend', () => {
+                    tile.classList.remove('shake');
+                }, { once: true });
+            });
+        }
+
+        function getHint() {
+            if (!gameActive) {
+                displayMessage("Start a game to get a hint!", true, 'regular');
+                return;
+            }
+            if (hintStreak === 0) {
+                displayMessage("You need a win streak to get a hint! Win a game first.", true, 'regular');
+                return;
+            }
+
+            
+            const secretLetters = secretWord.split('');
+            const guessedLetters = Object.keys(keyboardState).filter(key => keyboardState[key] === 'correct' || keyboardState[key] === 'present');
+
+            const availableLetters = secretLetters.filter(char => !guessedLetters.includes(char));
+
+            if (availableLetters.length > 0) {
+                hintLetter = availableLetters[randomInt(0, availableLetters.length - 1)];
+                displayMessage(`Hint: The word contains the letter '${hintLetter}'.`, false, 'regular');
+                hintStreak--; 
+                hintStreakCountSpan.textContent = hintStreak;
+
+                
+                const keyButton = regularWordleKeyboardDiv.querySelector(`button[data-key="${hintLetter}"]`);
+                if (keyButton) {
+                    keyButton.style.border = '2px dashed yellow';
+                    setTimeout(() => {
+                        keyButton.style.border = ''; 
+                    }, 1500);
+                }
+            } else {
+                displayMessage("No new hint available, you've already found all unique letters!", true, 'regular');
+            }
+        }
+
+
+       
+
+        async function generateReverseWordleClues(targetWord, numClues = 4) {
+            const clues = [];
+            const allWords = [...regularWordleWords5, ...regularWordleWords6, ...regularWordleWords7];
+            const availableWords = allWords.filter(word => word.length === targetWord.length && word !== targetWord);
+
+            if (availableWords.length < numClues) {
+                console.warn("Not enough words to generate all clues. Generating fewer clues.");
+                numClues = availableWords.length;
+            }
+
+            
+            for (let i = availableWords.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [availableWords[i], availableWords[j]] = [availableWords[j], availableWords[i]];
+            }
+
+            for (let i = 0; i < numClues; i++) {
+                const randomGuess = availableWords[i];
+                const feedback = getWordleFeedback(randomGuess, targetWord);
+                clues.push({ guess: randomGuess, feedback: feedback });
+            }
+            return clues;
+        }
+
+        function getWordleFeedback(guess, targetWord) {
+            const feedback = Array(guess.length).fill('');
+            const targetLetters = targetWord.split('');
+            const guessLetters = guess.split('');
+            const tempTarget = [...targetLetters]; 
+
+            
+            for (let i = 0; i < guess.length; i++) {
+                if (guessLetters[i] === tempTarget[i]) {
+                    feedback[i] = 'correct';
+                    tempTarget[i] = null; 
+                }
+            }
+
+            
+            for (let i = 0; i < guess.length; i++) {
+                if (feedback[i] === 'correct') continue; 
+
+                const charIndex = tempTarget.indexOf(guessLetters[i]);
+                if (charIndex !== -1) {
+                    feedback[i] = 'present';
+                    tempTarget[charIndex] = null; 
+                } else {
+                    feedback[i] = 'absent';
+                }
+            }
+            return feedback;
+        }
+
+        function drawReverseWordleClues() {
+            reverseWordleCluesDisplay.innerHTML = '<h4>Clues:</h4>';
+            reverseClues.forEach(clue => {
+                const clueRow = document.createElement('div');
+                clueRow.classList.add('reverse-wordle-clue-row');
+                clueRow.style.gridTemplateColumns = `repeat(${reverseWordLength}, 1fr)`;
+
+                clue.guess.split('').forEach((letter, index) => {
+                    const tile = document.createElement('div');
+                    tile.classList.add('tile', clue.feedback[index]);
+                    tile.textContent = letter;
+                    clueRow.appendChild(tile);
+                });
+                reverseWordleCluesDisplay.appendChild(clueRow);
+            });
+        }
+
+        async function initReverseWordle() {
+            
+            let wordsForLength;
+            if (reverseWordLength === 5) wordsForLength = regularWordleWords5;
+            else if (reverseWordLength === 6) wordsForLength = regularWordleWords6;
+            else if (reverseWordLength === 7) wordsForLength = regularWordleWords7;
+            
+            reverseSecretWord = wordsForLength[randomInt(0, wordsForLength.length - 1)].toUpperCase();
+            reverseCurrentGuess = '';
+            reverseGameActive = true;
+            reverseHintsRemaining = 2; 
+            reverseHintCountSpan.textContent = reverseHintsRemaining;
+            reverseWordleHintBtn.disabled = false; 
+            displayMessage('', false, 'reverse'); 
+
+            reverseClues = await generateReverseWordleClues(reverseSecretWord);
+            drawReverseWordleClues();
+
+            
+            reverseWordleGuessInput.value = '';
+            
+            reverseWordleGuessInput.disabled = true; 
+            reverseWordleSubmitBtn.disabled = false;
+
+            
+            resetVirtualKeyboard('reverse');
+            createVirtualKeyboard(reverseWordleKeyboardDiv, 'reverse');
+
+            console.log("Reverse Wordle Secret Word:", reverseSecretWord); 
+        }
+
+        function updateReverseWordleInput() {
+            reverseWordleGuessInput.value = reverseCurrentGuess;
+        }
+
+        function handleReverseWordleGuess() {
+            if (!reverseGameActive) return;
+
+            const guess = reverseCurrentGuess.toUpperCase(); 
+
+            if (guess.length !== reverseWordLength) {
+                displayMessage(`Guess must be ${reverseWordLength} letters long!`, true, 'reverse');
+                return;
+            }
+
+            const allWords = [...regularWordleWords5, ...regularWordleWords6, ...regularWordleWords7];
+            if (!allWords.includes(guess)) {
+                displayMessage('Not a valid word!', true, 'reverse');
+                return;
+            }
+
+            displayMessage('', false, 'reverse'); 
+
+            if (guess === reverseSecretWord) {
+                displayMessage('You cracked it! You found the secret word!', false, 'reverse');
+                reverseGameActive = false;
+                reverseWordleGuessInput.disabled = true;
+                reverseWordleSubmitBtn.disabled = true;
+                reverseWordleHintBtn.disabled = true; 
+            } else {
+                displayMessage('Incorrect secret word. Try again!', true, 'reverse');
+                
+                reverseWordleGuessInput.classList.add('shake');
+                reverseWordleGuessInput.addEventListener('animationend', () => {
+                    reverseWordleGuessInput.classList.remove('shake');
+                }, { once: true });
+            }
+        }
+
+        function getReverseWordleHint() {
+            if (!reverseGameActive) {
+                displayMessage("Start a game to get a hint!", true, 'reverse');
+                return;
+            }
+            if (reverseHintsRemaining <= 0) {
+                displayMessage("No hints remaining for Reverse Wordle!", true, 'reverse');
+                return;
+            }
+
+            
+            const secretLetters = reverseSecretWord.split('');
+            const revealedLetters = new Set();
+
+            
+            reverseClues.forEach(clue => {
+                clue.feedback.forEach((status, index) => {
+                    if (status === 'correct' || status === 'present') {
+                        revealedLetters.add(clue.guess[index]);
+                    }
+                });
+            });
+
+            
+            const unrevealedSecretLetters = secretLetters.filter(char => !revealedLetters.has(char));
+
+            if (unrevealedSecretLetters.length > 0) {
+                
+                const hintLetter = unrevealedSecretLetters[randomInt(0, unrevealedSecretLetters.length - 1)];
+
+                
+                let dummyGuessArray = Array(reverseWordLength).fill('');
+                let hintPosition = randomInt(0, reverseWordLength - 1);
+
+                
+                let attempts = 0;
+                while (hintLetter === reverseSecretWord[hintPosition] && attempts < reverseWordLength * 2) {
+                    hintPosition = randomInt(0, reverseWordLength - 1);
+                    attempts++;
+                }
+
+                dummyGuessArray[hintPosition] = hintLetter;
+
+                
+                const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+                const nonSecretLetters = alphabet.filter(char => !secretLetters.includes(char));
+
+                for (let i = 0; i < reverseWordLength; i++) {
+                    if (dummyGuessArray[i] === '') {
+                        if (nonSecretLetters.length > 0) {
+                            dummyGuessArray[i] = nonSecretLetters[randomInt(0, nonSecretLetters.length - 1)];
+                        } else {
+                            
+                            dummyGuessArray[i] = alphabet[randomInt(0, alphabet.length - 1)];
+                        }
+                    }
+                }
+
+                const dummyGuess = dummyGuessArray.join('');
+                const feedback = getWordleFeedback(dummyGuess, reverseSecretWord);
+
+                
+                let actualHintFeedback = [...feedback];
+                let hintLetterFoundInFeedback = false;
+                for(let i = 0; i < feedback.length; i++) {
+                    if (dummyGuess[i] === hintLetter && feedback[i] === 'present') {
+                        hintLetterFoundInFeedback = true;
+                        break;
+                    }
+                }
+
+                
+                if (!hintLetterFoundInFeedback) {
+                    const originalFeedback = getWordleFeedback(dummyGuess, reverseSecretWord);
+                    const newFeedback = Array(reverseWordLength).fill('absent'); 
+                    for (let i = 0; i < reverseWordLength; i++) {
+                        if (dummyGuess[i] === hintLetter) {
+                            newFeedback[i] = 'present'; 
+                        } else {
+                            newFeedback[i] = originalFeedback[i]; 
+                        }
+                    }
+                    actualHintFeedback = newFeedback;
+                }
+
+                reverseClues.push({ guess: dummyGuess, feedback: actualHintFeedback });
+                drawReverseWordleClues();
+                displayMessage(`Hint: A new clue has been added!`, false, 'reverse');
+                reverseHintsRemaining--;
+                reverseHintCountSpan.textContent = reverseHintsRemaining;
+                if (reverseHintsRemaining <= 0) {
+                    reverseWordleHintBtn.disabled = true;
+                }
+            } else {
+                displayMessage("All unique letters in the secret word have already been revealed in clues!", true, 'reverse');
+                reverseWordleHintBtn.disabled = true; 
+            }
+        }
+
+
+        
+        function showGame(gameId) {
+            regularWordleGame.classList.remove('active');
+            reverseWordleGame.classList.remove('active');
+
+            navRegularWordleBtn.classList.remove('active');
+            navReverseWordleBtn.classList.remove('active');
+
+            if (gameId === 'regularWordle') {
+                regularWordleGame.classList.add('active');
+                navRegularWordleBtn.classList.add('active');
+                initRegularWordle();
+            } else if (gameId === 'reverseWordle') {
+                reverseWordleGame.classList.add('active');
+                navReverseWordleBtn.classList.add('active');
+                initReverseWordle();
+            }
+        }
+
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            showGame('regularWordle'); 
+
+            
+            navRegularWordleBtn.addEventListener('click', () => showGame('regularWordle'));
+            navReverseWordleBtn.addEventListener('click', () => showGame('reverseWordle'));
+
+            
+            themeDefaultBtn.addEventListener('click', () => switchTheme('default'));
+            themeNeonBtn.addEventListener('click', () => switchTheme('neon'));
+
+            
+            regularWordleSubmitBtn.addEventListener('click', handleRegularWordleGuess);
+            regularWordleRestartBtn.addEventListener('click', initRegularWordle);
+            regularWordleHintBtn.addEventListener('click', getHint);
+
+            
+            regularWordleEasyBtn.addEventListener('click', () => {
+                wordLength = 5;
+                maxGuesses = 6;
+                currentWordList = regularWordleWords5;
+                regularWordleEasyBtn.classList.add('active');
+                regularWordleHardBtn.classList.remove('active');
+                regularWordleExpertBtn.classList.remove('active');
+                initRegularWordle();
+            });
+            regularWordleHardBtn.addEventListener('click', () => {
+                wordLength = 6;
+                maxGuesses = 7; 
+                currentWordList = regularWordleWords6;
+                regularWordleEasyBtn.classList.remove('active');
+                regularWordleHardBtn.classList.add('active');
+                regularWordleExpertBtn.classList.remove('active');
+                initRegularWordle();
+            });
+            regularWordleExpertBtn.addEventListener('click', () => {
+                wordLength = 7;
+                maxGuesses = 8; 
+                currentWordList = regularWordleWords7;
+                regularWordleEasyBtn.classList.remove('active');
+                regularWordleHardBtn.classList.remove('active');
+                regularWordleExpertBtn.classList.add('active');
+                initRegularWordle();
+            });
+
+            
+            reverseWordleSubmitBtn.addEventListener('click', handleReverseWordleGuess);
+            reverseWordleRestartBtn.addEventListener('click', initReverseWordle);
+            reverseWordleHintBtn.addEventListener('click', getReverseWordleHint); 
+
+            
+            reverseWordleEasyBtn.addEventListener('click', () => {
+                reverseWordLength = 5;
+                reverseWordleEasyBtn.classList.add('active');
+                reverseWordleHardBtn.classList.remove('active');
+                reverseWordleExpertBtn.classList.remove('active');
+                initReverseWordle();
+            });
+            reverseWordleHardBtn.addEventListener('click', () => {
+                reverseWordLength = 6;
+                reverseWordleEasyBtn.classList.remove('active');
+                reverseWordleHardBtn.classList.add('active');
+                reverseWordleExpertBtn.classList.remove('active');
+                initReverseWordle();
+            });
+            reverseWordleExpertBtn.addEventListener('click', () => {
+                reverseWordLength = 7;
+                reverseWordleEasyBtn.classList.remove('active');
+                reverseWordleHardBtn.classList.remove('active');
+                reverseWordleExpertBtn.classList.add('active');
+                initReverseWordle();
+            });
+
+            
+            document.addEventListener('keydown', (e) => {
+                if (regularWordleGame.classList.contains('active')) {
+                    const key = e.key.toUpperCase();
+                    if (key === 'BACKSPACE') {
+                        handleVirtualKeyPress('BACKSPACE', 'regular');
+                    } else if (key === 'ENTER') {
+                        handleVirtualKeyPress('ENTER', 'regular');
+                    } else if (key.match(/^[A-Z]$/)) { 
+                        handleVirtualKeyPress(key, 'regular');
+                    }
+                } else if (reverseWordleGame.classList.contains('active')) {
+                    const key = e.key.toUpperCase();
+                    if (key === 'BACKSPACE') {
+                        handleVirtualKeyPress('BACKSPACE', 'reverse');
+                    } else if (key === 'ENTER') {
+                        handleVirtualKeyPress('ENTER', 'reverse');
+                    } else if (key.match(/^[A-Z]$/)) { 
+                        handleVirtualKeyPress(key, 'reverse');
+                    }
+                }
+            });
+
+            
+        });
+    </script>
+</body>
+</html>
